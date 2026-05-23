@@ -25,21 +25,16 @@ async def upload_document(file: UploadFile = File(...)):
 
         # Validate extension
         file_extension = Path(file.filename).suffix.lower()
-
         if file_extension not in ALLOWED_FILE_TYPES:
             raise HTTPException(
-                status_code=400,
+                status_code=415,
                 detail=f"Unsupported file type: {file_extension}"
             )
 
-        # Validate size
-        file_contents = await file.read()
-
-        file_size_mb = len(file_contents) / (1024 * 1024)
-
-        if file_size_mb > MAX_FILE_SIZE_MB:
+        # Validate size (without reading into memory)
+        if file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
             raise HTTPException(
-                status_code=400,
+                status_code=413,
                 detail=f"File exceeds {MAX_FILE_SIZE_MB}MB limit"
             )
 
@@ -57,7 +52,7 @@ async def upload_document(file: UploadFile = File(...)):
             "success": True,
             "filename": file.filename,
             "content_type": file.content_type,
-            "size_mb": round(file_size_mb, 2),
+            "size_mb": round(file.size, 2),
             "concepts": processed.get("concepts", [])
         }
 

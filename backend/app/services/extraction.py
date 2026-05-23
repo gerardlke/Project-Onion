@@ -1,66 +1,52 @@
-import re
-from collections import Counter
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-
-from app.schemas.upload import (
-    ConceptFrequency,
-    ConceptPreview,
-)
-
-STOPWORDS = set(ENGLISH_STOP_WORDS)
+from docx import Document
+from fastapi import UploadFile
+from io import BytesIO
 
 
-def extract_concepts(chunks):
-    """Extracts main concept from text across chunks
+async def extract_text(file: UploadFile) -> str:
+    """Extracts file extension for specific text extraction
 
     Input:
 
     Ouput:
     """
+    extension = file.filename.split(".")[-1].lower()
 
-    concept_previews = []
+    if extension in ["txt", "md"]:
+        return await extract_text_file(file)
 
-    # Iterate through chunks
-    for index, chunk in enumerate(chunks):
-        
-        # Tokenize each chunk
-        words = tokenize(chunk)
+    elif extension == "docx":
+        return await extract_docx_file(file)
 
-        # Find concepts in text chunks
-        filtered_words = [
-            word for word in words
-            if word not in STOPWORDS and len(word) > 2
-        ]
-        word_counts = Counter(filtered_words)
-        top_concepts = word_counts.most_common(10)
-
-        # Append concept
-        concept_previews.append(
-            ConceptPreview(
-                chunk_index=index,
-                concepts=[
-                    ConceptFrequency(
-                        concept=word,
-                        frequency=count
-                    )
-                    for word, count in top_concepts
-                ]
-            )
+    else:
+        raise ValueError(
+            f"Unsupported file type: {extension}"
         )
 
-    return concept_previews
 
-
-def tokenize(text):
-    """Tokenize text
+async def extract_text_file(file: UploadFile) -> str:
+    """Extracts text from txt file
 
     Input:
-
+    
     Ouput:
     """
+    contents = await file.read()
+    return contents.decode("utf-8")
 
-    text = text.lower()
-    words = re.findall(r"\b[a-zA-Z]+\b", text)
 
-    # TODO: Use tokenizer maybe idk
-    return words
+async def extract_docx_file(file: UploadFile) -> str:
+    """Extracts text from docx file
+
+    Input:
+    
+    Ouput:
+    """
+    contents = await file.read()
+    doc = Document(BytesIO(contents))
+
+    full_text = []
+    for paragraph in doc.paragraphs:
+        full_text.append(paragraph.text)
+
+    return "\n".join(full_text)
