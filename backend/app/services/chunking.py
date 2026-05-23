@@ -1,6 +1,8 @@
-# TODO: Move to config file later
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
+### Set up configs
+from app.config import (
+    CHUNK_SIZE,
+    CHUNK_OVERLAP,
+)
 
 
 def chunk_text(text: str):

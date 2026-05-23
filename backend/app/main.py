@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import app.routes as routes
+from app.routes import (
+    upload
+)
 
 
 ### Application Lifespan ==================================
@@ -20,6 +22,7 @@ async def lifespan(app: FastAPI):
 
     print("Starting backend...")
 
+    # TODO: Load things needed in backend
     # app.state.embedding_model = load_embedding_model()
     yield
 
@@ -55,7 +58,7 @@ async def health_check():
     }
 
 app.include_router(
-    routes.upload,
+    upload.router,
     prefix="/upload",
     tags=["Upload"]
 )

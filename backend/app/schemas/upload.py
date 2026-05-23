@@ -10,7 +10,8 @@ class ConceptPreview(BaseModel):
     concepts: list[ConceptFrequency]
 
 class UploadResponse(BaseModel):
+    success: bool
     filename: str
-    num_chunks: int
+    content_type: str
+    size_mb: float
     concepts: list[ConceptPreview]
-    status: str

@@ -1,8 +1,11 @@
+from fastapi import UploadFile
+
 from app.services.ingestion import extract_text
 from app.services.chunking import chunk_text
 from app.services.extraction import extract_concepts
 
-def process_document(file_path):
+
+async def process_document(file: UploadFile, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:
@@ -10,7 +13,7 @@ def process_document(file_path):
     Ouput:
     """
 
-    raw_text = extract_text(file_path)
+    raw_text = await extract_text(file)
     chunks = chunk_text(raw_text)
     concepts = extract_concepts(chunks)
 

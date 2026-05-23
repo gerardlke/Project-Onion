@@ -1,53 +1,52 @@
-from pathlib import Path
 from docx import Document
+from fastapi import UploadFile
+from io import BytesIO
 
 
-# TODO: Move to config file later
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
-
-def extract_text(file_path: Path) -> str:
+async def extract_text(file: UploadFile) -> str:
     """Extracts file extension for specific text extraction
 
     Input:
 
     Ouput:
     """
+    extension = file.filename.split(".")[-1].lower()
 
-    suffix = file_path.suffix.lower()
+    if extension in ["txt", "md"]:
+        return await extract_text_file(file)
 
-    if suffix == ".txt":
-        return extract_txt(file_path)
-    elif suffix == ".md":
-        return extract_txt(file_path)
-    elif suffix == ".docx":
-        return extract_docx(file_path)
+    elif extension == "docx":
+        return await extract_docx_file(file)
+
     else:
-        raise ValueError(f"Unsupported file type: {suffix}")
+        raise ValueError(
+            f"Unsupported file type: {extension}"
+        )
 
 
-def extract_txt(file_path: Path) -> str:
+async def extract_text_file(file: UploadFile) -> str:
     """Extracts text from txt file
 
     Input:
     
     Ouput:
     """
+    contents = await file.read()
+    return contents.decode("utf-8")
 
-    with open(file_path, "r", encoding="utf-8") as file:
-        return file.read()
 
-
-def extract_docx(file_path: Path) -> str:
+async def extract_docx_file(file: UploadFile) -> str:
     """Extracts text from docx file
 
     Input:
     
     Ouput:
     """
+    contents = await file.read()
+    doc = Document(BytesIO(contents))
 
-    doc = Document(file_path)
     full_text = []
     for paragraph in doc.paragraphs:
         full_text.append(paragraph.text)
+
     return "\n".join(full_text)
