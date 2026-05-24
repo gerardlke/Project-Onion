@@ -1,12 +1,21 @@
 from pathlib import Path
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from sqlalchemy.orm import Session
+from fastapi import (
+    APIRouter, 
+    UploadFile, 
+    HTTPException, 
+    File, 
+    Depends
+)
 
 from app.logging import setup_logger
 from app.pipelines.upload_pipeline import process_document
 from app.schemas.upload import UploadResponse
+from app.db.session import get_db
+
 
 ### Set up configs
-from app.config import (
+from app.configs.config import (
     ALLOWED_FILE_TYPES,
     MAX_FILE_SIZE_MB,
 )
@@ -17,8 +26,16 @@ logger = setup_logger(__name__)
 router = APIRouter()
 
 @router.post("/", response_model=UploadResponse)
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """API Route for uploading new document
 
+    Input:
+
+    Ouput:
+    """
     try:
         logger.info(f"Upload request received for {file.filename}.")
         logger.info("Starting file validation.")
@@ -40,21 +57,23 @@ async def upload_document(file: UploadFile = File(...)):
 
         # Run pipeline
         logger.info("Starting file processing.")
-        processed = await process_document(
-            file,
-            filename=file.filename
+        metadata = await process_document(
+            file=file,
+            db=db
         )
 
         logger.info("Finished file upload.")
 
-        # Response
-        return {
-            "success": True,
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_mb": round(file.size, 2),
-            "concepts": processed.get("concepts", [])
-        }
+        # Response model
+        return UploadResponse(
+            success=True,
+            filename=file.filename,
+            content_type=file.content_type,
+            size_mb=file.size,
+            document_id=metadata.get("id", -1),
+            num_chunks=metadata.get("chunks", -1),
+            num_concepts=metadata.get("concepts", -1)
+        )
 
     except HTTPException as http_error:
         logger.warning(

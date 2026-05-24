@@ -1,5 +1,5 @@
 ### Set up configs
-from app.config import (
+from app.configs.config import (
     CHUNK_SIZE,
     CHUNK_OVERLAP,
 )
@@ -22,5 +22,5 @@ def chunk_text(text: str):
         chunk = text[start:end]
         chunks.append(chunk)
         start += CHUNK_SIZE - CHUNK_OVERLAP
-
+        
     return chunks

@@ -1,17 +1,25 @@
 from pydantic import BaseModel
 
-
-class ConceptFrequency(BaseModel):
+    
+class ExtractedConcept(BaseModel):
     concept: str
     frequency: int
-
-class ConceptPreview(BaseModel):
     chunk_index: int
-    concepts: list[ConceptFrequency]
+
+
+class PipelineDocument(BaseModel):
+    filename: str
+    content_type: str
+    raw_text: str
+    chunks: list[str]
+    concepts: list[ExtractedConcept]
+
 
 class UploadResponse(BaseModel):
     success: bool
     filename: str
     content_type: str
     size_mb: float
-    concepts: list[ConceptPreview]
+    document_id: int
+    num_chunks: int
+    num_concepts: int

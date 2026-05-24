@@ -1,14 +1,19 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db.database import engine
+from app.schemas.database import Base
+
+from app.logging import setup_logger
 from app.routes import (
     upload
 )
 
 
 ### Application Lifespan ==================================
+
+logger = setup_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,13 +25,17 @@ async def lifespan(app: FastAPI):
     - caches
     """
 
-    print("Starting backend...")
+    logger.info("Starting backend...")
 
     # TODO: Load things needed in backend
     # app.state.embedding_model = load_embedding_model()
-    yield
+    
+    # Setting up database
+    logger.info("Starting database...")
+    Base.metadata.create_all(bind=engine)
 
-    print("Shutting down backend...")
+    yield
+    logger.info("Shutting down backend...")
 
 app = FastAPI(
     title="Project Onion Backend",

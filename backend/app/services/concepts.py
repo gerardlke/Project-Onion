@@ -2,10 +2,8 @@ import re
 from collections import Counter
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-from app.schemas.upload import (
-    ConceptFrequency,
-    ConceptPreview,
-)
+from app.schemas.upload import ExtractedConcept
+
 
 STOPWORDS = set(ENGLISH_STOP_WORDS)
 
@@ -18,7 +16,7 @@ def extract_concepts(chunks):
     Ouput:
     """
 
-    concept_previews = []
+    extracted_concepts = []
 
     # Iterate through chunks
     for index, chunk in enumerate(chunks):
@@ -35,20 +33,16 @@ def extract_concepts(chunks):
         top_concepts = word_counts.most_common(10)
 
         # Append concept
-        concept_previews.append(
-            ConceptPreview(
-                chunk_index=index,
-                concepts=[
-                    ConceptFrequency(
-                        concept=word,
-                        frequency=count
-                    )
-                    for word, count in top_concepts
-                ]
+        for word, frequency in top_concepts:
+            extracted_concepts.append(
+                ExtractedConcept(
+                    concept=word,
+                    frequency=frequency,
+                    chunk_index=index
+                )
             )
-        )
 
-    return concept_previews
+    return extracted_concepts
 
 
 def tokenize(text):
@@ -58,7 +52,6 @@ def tokenize(text):
 
     Ouput:
     """
-
     text = text.lower()
     words = re.findall(r"\b[a-zA-Z]+\b", text)
 
