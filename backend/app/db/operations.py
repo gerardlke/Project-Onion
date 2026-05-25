@@ -55,3 +55,29 @@ def create_concepts(
     db.add_all(entries)
     db.commit()
     return entries
+
+# =====================================================
+# GET ALL CONCEPT NODES
+# =====================================================
+
+def get_all_concepts(
+    db: Session
+):
+
+    return db.query(Concept).all()
+
+
+# =====================================================
+# GET SINGLE CONCEPT
+# =====================================================
+
+def get_concept_by_id(
+    db: Session,
+    concept_id: int
+):
+
+    return (
+        db.query(Concept)
+        .filter(Concept.id == concept_id)
+        .first()
+    )

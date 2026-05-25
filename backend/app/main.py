@@ -71,3 +71,9 @@ app.include_router(
     prefix="/upload",
     tags=["Upload"]
 )
+
+app.include_router(
+    universe.router,
+    prefix="/universe",
+    tags=["Universe"]
+)
