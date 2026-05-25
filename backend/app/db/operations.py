@@ -46,6 +46,9 @@ def create_concepts(
                 document_id=document_id,
                 concept=concept.concept,
                 frequency=concept.frequency,
+                x=concept.x,
+                y=concept.y,
+                z=concept.z
             )
         )
 

@@ -1,8 +1,10 @@
 from fastapi import UploadFile
 
-from app.services.extraction import extract_text
-from app.services.chunking import chunk_text
+from app.services.extract import extract_text
+from app.services.chunk import chunk_text
 from app.services.concepts import extract_concepts
+from app.services.embed import generate_embeddings, reduce_dimensions
+
 from app.db.operations import create_document, create_concepts
 from app.schemas.upload import PipelineDocument
 
@@ -18,6 +20,20 @@ async def process_document(file: UploadFile, db, **kwargs):
     raw_text = await extract_text(file)
     chunks = chunk_text(raw_text)
     concepts = extract_concepts(chunks)
+
+    # Embedding and reducing to get latent positions in universe
+    concept_strings = [concept.concept for concept in concepts]
+    embeddings = generate_embeddings(
+        concept_strings
+    )
+    coordinates = reduce_dimensions(
+        embeddings,
+        dimensions=3
+    )
+    for concept, coordinate in zip(concepts, coordinates):
+        concept.x = float(coordinate[0])
+        concept.y = float(coordinate[1])
+        concept.z = float(coordinate[2])
 
     # Build internal object
     pipeline_document = PipelineDocument(

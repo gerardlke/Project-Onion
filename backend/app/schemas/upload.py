@@ -5,7 +5,9 @@ class ExtractedConcept(BaseModel):
     concept: str
     frequency: int
     chunk_index: int
-
+    x: float | None = None
+    y: float | None = None
+    z: float | None = None
 
 class PipelineDocument(BaseModel):
     filename: str
