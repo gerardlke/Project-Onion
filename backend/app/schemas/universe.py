@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -16,7 +17,7 @@ class NodeDetailResponse(BaseModel):
     id: int
     concept: str
     frequency: int
-    chunk_index: int
+    chunk_index: Optional[int] = None
     document_id: int
     x: float
     y: float

@@ -15,11 +15,10 @@ logger = setup_logger(__name__)
 
 
 ### Set up database engine
-load_dotenv(dotenv_path="app/configs/.env")
+load_dotenv()
 
-DATABASE_URL = (
-    f'postgresql://postgres:{os.getenv("PG_Password")}@localhost/onion_db'
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 engine = create_engine(
     DATABASE_URL,

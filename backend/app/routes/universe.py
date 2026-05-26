@@ -101,7 +101,7 @@ async def get_node_detail(
         )
     except Exception as error:
         logger.exception(
-            f"Unexpected error while extracting node internal data"
+            f"Unexpected error while extracting node internal data due to {error}"
         )
         raise HTTPException(
             status_code=500,

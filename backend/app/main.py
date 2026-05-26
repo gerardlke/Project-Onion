@@ -2,12 +2,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.database import engine
-from app.schemas.database import Base
+from app.db.database import (
+    engine, 
+    Base
+)
 from app.logging import setup_logger
 from app.routes import (
     upload,
-    universe
+    universe,
+    user
 )
 
 from app.configs.config import RESET_DB
@@ -79,4 +82,10 @@ app.include_router(
     universe.router,
     prefix="/universe",
     tags=["Universe"]
+)
+
+app.include_router(
+    user.router,
+    prefix="/users",
+    tags=["Users"]
 )
