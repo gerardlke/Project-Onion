@@ -1,11 +1,18 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import PCA
 
+from app.logging import setup_logger
 
-# TODO: Move to config later
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
+from app.configs.config import ENCODER
+
+
+### Set up logger for model logs
+logger = setup_logger(__name__)
+
+### Set up configs for encoder
+logger.info("Setting up encoder.")
+model = SentenceTransformer(ENCODER)
+logger.info("Encoder downloaded.")
 
 
 def generate_embeddings(concepts: list[str]):
@@ -31,9 +38,9 @@ def reduce_dimensions(embeddings, dimensions: int = 3):
     pca = PCA(
         n_components=dimensions
     )
-
     projected = pca.fit_transform(
         embeddings
     )
+    logger.info(f"Reduced dimensions from {embeddings.shape[1]}D to {projected.shape[1]}D")
 
     return projected

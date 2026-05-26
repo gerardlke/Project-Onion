@@ -1,0 +1,5 @@
+Binary Search Trees are hierarchical data structures.
+
+Depth First Search traverses graphs recursively.
+
+Dynamic Programming optimizes overlapping subproblems.

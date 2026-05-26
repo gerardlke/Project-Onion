@@ -1,10 +1,11 @@
+from typing import Optional
 from pydantic import BaseModel
 
-    
+
 class ExtractedConcept(BaseModel):
     concept: str
     frequency: int
-    chunk_index: int
+    chunk_index: Optional[int] = None
     x: float | None = None
     y: float | None = None
     z: float | None = None

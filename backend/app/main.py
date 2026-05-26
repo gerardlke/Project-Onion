@@ -2,14 +2,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.database import engine
-from app.schemas.database import Base
-
+from app.db.database import (
+    engine, 
+    Base
+)
 from app.logging import setup_logger
 from app.routes import (
-    upload
+    upload,
+    universe,
+    user
 )
 
+from app.configs.config import RESET_DB
 
 ### Application Lifespan ==================================
 
@@ -32,6 +36,8 @@ async def lifespan(app: FastAPI):
     
     # Setting up database
     logger.info("Starting database...")
+    if RESET_DB:
+        Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
     yield
@@ -76,4 +82,10 @@ app.include_router(
     universe.router,
     prefix="/universe",
     tags=["Universe"]
+)
+
+app.include_router(
+    user.router,
+    prefix="/users",
+    tags=["Users"]
 )

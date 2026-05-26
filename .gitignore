@@ -2,9 +2,8 @@
 *venv
 *env
 
-# Configs
+# Private configs
 *.env
-*config.py
 
 # Caches
 *__pycache__
