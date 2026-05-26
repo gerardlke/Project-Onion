@@ -1,0 +1,43 @@
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #171e35;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  max-width: 400px;
+  padding: 42px 34px 36px;
+  margin: 0 auto;
+}
+
+.login-form h2 {
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0 0 24px;
+}
+
+.login-form label {
+  align-self: stretch;
+  margin-bottom: 8px;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.login-form input {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  align-self: stretch;
+  margin-bottom: 16px;
+}
+
+.login-form button {
+  padding: 12px 24px;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: bold;
+}
