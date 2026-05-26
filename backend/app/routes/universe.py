@@ -6,7 +6,7 @@ from fastapi import (
 )
 
 from app.db.session import get_db
-from app.db.operation import (
+from app.db.operations import (
     get_all_concepts,
     get_concept_by_id
 )
@@ -15,6 +15,7 @@ from app.schemas.universe import (
     UniverseResponse,
     NodeDetailResponse
 )
+from app.logging import setup_logger
 
 
 ### Set up API and logger
@@ -56,7 +57,7 @@ async def get_universe_nodes(
 
     except Exception as error:
         logger.exception(
-            f"Unexpected error while extracting node metadata"
+            f"Unexpected error while extracting node metadata: {error}"
         )
         raise HTTPException(
             status_code=500,

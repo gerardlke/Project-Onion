@@ -4,12 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.database import engine
 from app.schemas.database import Base
-
 from app.logging import setup_logger
 from app.routes import (
-    upload
+    upload,
+    universe
 )
 
+from app.configs.config import RESET_DB
 
 ### Application Lifespan ==================================
 
@@ -32,6 +33,8 @@ async def lifespan(app: FastAPI):
     
     # Setting up database
     logger.info("Starting database...")
+    if RESET_DB:
+        Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
     yield
