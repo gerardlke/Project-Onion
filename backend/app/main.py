@@ -7,7 +7,9 @@ from app.schemas.database import Base
 
 from app.logging import setup_logger
 from app.routes import (
-    upload
+    upload,
+    universe,
+    user
 )
 
 
@@ -76,4 +78,10 @@ app.include_router(
     universe.router,
     prefix="/universe",
     tags=["Universe"]
+)
+
+app.include_router(
+    user.router,
+    prefix="/users",
+    tags=["Users"]
 )

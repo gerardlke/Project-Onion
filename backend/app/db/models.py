@@ -10,14 +10,39 @@ from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 
+class User(Base):
+    """
+    Schema for User table in db, one-to-many relationship with Documents
+    """
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, nullable=False)
+
+    documents = relationship(
+        "Document",
+        back_populates="user",
+        cascade="all, delete"
+    )
+
+
 class Document(Base):
     """
-    Schema for Document table in db
+    Schema for Document table in db, many-to-many relationship with Concepts
     """
     __tablename__ = "documents"
+
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
     filename = Column(String, nullable=False)
+    content_type = Column(String)
     raw_text = Column(Text)
+
+    user = relationship(
+        "User",
+        back_populates="documents"
+    )
+
     concepts = relationship(
         "Concept",
         back_populates="document",
@@ -34,6 +59,7 @@ class Concept(Base):
     # Metadata
     id = Column(Integer, primary_key=True)
     document_id = Column(Integer, ForeignKey("documents.id"))
+    chunk_index = Column(Integer)
     concept = Column(String, nullable=False)
     frequency = Column(Integer)
 
