@@ -1,7 +1,7 @@
 # Environments/Dependencies
-*venv
-*env
-*/node_modules
+*venv/
+*env/
+*/node_modules/
 */.pnp
 *.pnp.js
 
@@ -11,9 +11,12 @@
 # Caches
 *__pycache__
 
+# Logs
+*.log
+
 # Test files
-*/test_files
-*/test
+*/test_files/
+*/test/
 
 # Pre-deployment
 */coverage
