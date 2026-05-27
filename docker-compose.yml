@@ -4,7 +4,7 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: onion_postgres
+    container_name: project_onion_db
     restart: always
     env_file:
       - .env
@@ -17,7 +17,7 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: onion_backend
+    container_name: project_onion_backend
     restart: always
     env_file:
       - .env
@@ -28,15 +28,15 @@ services:
     depends_on:
       - postgres
 
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-    depends_on:
-      - backend
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - ./frontend:/app
+  #   depends_on:
+  #     - backend
 
 volumes:
   postgres_data:

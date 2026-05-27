@@ -8,6 +8,7 @@ from app.db.database import (
 )
 from app.logging import setup_logger
 from app.routes import (
+    admin,
     upload,
     universe,
     user
@@ -73,6 +74,12 @@ async def health_check():
     }
 
 app.include_router(
+    admin.router,
+    prefix="/admin",
+    tags=["Admin"]
+)
+
+app.include_router(
     upload.router,
     prefix="/upload",
     tags=["Upload"]
@@ -86,6 +93,6 @@ app.include_router(
 
 app.include_router(
     user.router,
-    prefix="/users",
-    tags=["Users"]
+    prefix="/user",
+    tags=["User"]
 )

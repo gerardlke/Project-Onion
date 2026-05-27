@@ -8,6 +8,28 @@ from app.db.models import (
 )
 
 
+### Administrative queries ============================
+
+def reset_database(db: Session):
+    """Clears all rows from the database tables without destroying schema structures
+
+    Input:
+
+    Output:
+    """
+    try:
+        db.query(Concept).delete()
+        db.query(Document).delete()
+        db.query(User).delete()
+        
+        db.commit()
+        return {"success": True, "detail": "Database contents successfully cleared."}
+    
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "detail": f"Database reset failed: {str(e)}"}
+
+
 ### User queries ======================================
 
 def get_user_by_username(db: Session, username: str):
