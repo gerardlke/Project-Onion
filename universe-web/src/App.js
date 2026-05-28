@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './App.css';
 import Stars from './Components/Stars';
+import NetworkScene from './Components/NetworkScene';
 import Login from './Login/Login';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
       formData.append('file', file);
 
       try {
-        const response = await fetch('/api/upload/', {
+        const response = await fetch('/upload/', {
           method: 'POST',
           body: formData,
         });
@@ -51,7 +52,7 @@ function App() {
   }
 
   return (
-
+      
       <div className="app">
         <h1>Welcome to Project Onion!</h1>
         <p className="welcome-user">Signed in as {loggedInUser}</p>
@@ -61,6 +62,9 @@ function App() {
       <button type="button" className="upload-button" onClick={handleButtonClick}>
         Upload Your Notes
       </button>
+      <div style={{ width: '100vw', height: '100vh', background: '#0b0f19' }}>
+      <NetworkScene />
+    </div>
 
       {showPopup && (
         <div className="popup-overlay" role="presentation">

@@ -1,4 +1,4 @@
-import starImage from '../Star.png';
+import starImage from '../Images/Star.png';
 
 function Stars() {
   return (
