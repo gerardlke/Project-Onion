@@ -1,29 +1,18 @@
-export const nodes = [
-  {
-    id: 1,
-    position: [-3, 1, 0],
+/**
+ * Builds the first universe node from an uploaded file name.
+ *
+ * Keeping this as a factory function makes it easier to replace the placeholder
+ * metadata with backend-derived concepts later without changing NetworkScene.
+ *
+ * @param {string} fileName - Name of the file selected by the user.
+ * @returns {{id: string, position: [number, number, number], color: string, label: string, info: string}}
+ */
+export function createUploadedFileNode(fileName) {
+  return {
+    id: 'uploaded-file',
+    position: [0, 0, 0],
     color: '#4f46e5',
-    label: 'Server Cluster A',
-    info: 'Status: Operational | Load: 42%',
-  },
-  {
-    id: 2,
-    position: [2, 2, -2],
-    color: '#06b6d4',
-    label: 'Database B',
-    info: 'Status: Syncing | Delay: 12ms',
-  },
-  {
-    id: 3,
-    position: [1, -2, 1],
-    color: '#10b981',
-    label: 'Gateway C',
-    info: 'Status: Active | Traffic: High',
-  },
-];
-
-export const links = [
-  [1, 2],
-  [2, 3],
-  [3, 1],
-];
+    label: fileName || 'Uploaded File',
+    info: 'Your uploaded notes are ready to explore.',
+  };
+}

@@ -41,7 +41,7 @@ test('shows a star image after a successful file upload', async () => {
   });
 
   expect(fetch).toHaveBeenCalledWith(
-    '/api/upload/',
+    '/upload/',
     expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
   );
 });

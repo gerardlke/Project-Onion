@@ -1,42 +1,34 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Line, OrbitControls } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import NetworkNode from './NetworkNodes';
-import { links, nodes } from '../Data/network.js';
+import { createUploadedFileNode } from '../Data/network.js';
 
-export default function NetworkScene() {
+/**
+ * Renders the 3D universe canvas.
+ *
+ * The canvas is intentionally mounted even when there are no nodes. Before a
+ * file is selected, the scene is blank. After upload, the file is converted
+ * into the first network node.
+ *
+ * @param {Object} props
+ * @param {File|null} [props.uploadedFile=null] - Latest file selected by the user.
+ * @returns {JSX.Element}
+ */
+export default function NetworkScene({ uploadedFile = null }) {
   const [activeNode, setActiveNode] = useState(null);
 
-  const nodesById = useMemo(
-    () => new Map(nodes.map((node) => [node.id, node])),
-    [],
-  );
+  // Derive renderable scene data from React state instead of storing duplicate node state.
+  const visibleNodes = uploadedFile
+    ? [createUploadedFileNode(uploadedFile.name)]
+    : [];
 
   return (
     <Canvas camera={{ position: [0, 0, 7], fov: 60 }}>
       <ambientLight intensity={0.6} />
       <pointLight position={[10, 10, 10]} />
 
-      {links.map(([fromId, toId]) => {
-        const fromNode = nodesById.get(fromId);
-        const toNode = nodesById.get(toId);
-
-        if (!fromNode || !toNode) {
-          return null;
-        }
-
-        return (
-          <Line
-            key={`${fromId}-${toId}`}
-            points={[fromNode.position, toNode.position]}
-            color="#4b5563"
-            lineWidth={1.5}
-            dashed={false}
-          />
-        );
-      })}
-
-      {nodes.map((node) => (
+      {visibleNodes.map((node) => (
         <NetworkNode
           key={node.id}
           position={node.position}
@@ -47,6 +39,7 @@ export default function NetworkScene() {
         />
       ))}
 
+      {/* OrbitControls is scoped to this canvas, so page layout remains stable. */}
       <OrbitControls enableZoom makeDefault />
     </Canvas>
   );

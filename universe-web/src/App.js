@@ -5,15 +5,36 @@ import Stars from './Components/Stars';
 import NetworkScene from './Components/NetworkScene';
 import Login from './Login/Login';
 
+/**
+ * Root application component.
+ *
+ * Responsibilities:
+ * - Hold top-level UI state for login, upload modal visibility, and the latest uploaded file.
+ * - Render the login screen until a user name is submitted.
+ * - Keep the network canvas mounted after login so the universe is visible before and after upload.
+ */
 function App() {
   const [loggedInUser, setLoggedInUser] = useState('');
-  const [fileUploaded, setFileUploaded] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const fileUploaded = Boolean(uploadedFile);
 
+  /**
+   * Handles file selection from the upload dialog.
+   *
+   * The selected file is stored immediately so the universe can create a node
+   * without waiting for backend processing. The upload request still runs in the
+   * background so the server can process the document when it is available.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} event - File input change event.
+   * @returns {Promise<void>}
+   */
   async function fileUploadEvent(event) {
     const file = event.target.files[0];
     if (file) {
-      // Handle the file upload logic here
+      setUploadedFile(file);
+      setShowPopup(false);
+
       const formData = new FormData();
       formData.append('file', file);
 
@@ -23,9 +44,7 @@ function App() {
           body: formData,
         });
 
-        if (response.ok) {
-          setFileUploaded(true);
-        } else {
+        if (!response.ok) {
           console.error('File upload failed');
         }
       } catch (error) {
@@ -34,10 +53,16 @@ function App() {
     }
   }
 
+  /**
+   * Opens the upload dialog from the main page call-to-action.
+   */
   function handleButtonClick() {
     setShowPopup(true);
   }
 
+  /**
+   * Closes the upload dialog without changing the current uploaded file.
+   */
   function closePopup() {
     setShowPopup(false);
   }
@@ -46,25 +71,31 @@ function App() {
     return (
       <div className="app login-page">
         <h1>Welcome to Project Onion!</h1>
+        {/* Login owns the form fields; App only receives the submitted user name. */}
         <Login onLogin={setLoggedInUser} />
       </div>
     );
   }
 
   return (
-      
-      <div className="app">
+    <div className="app">
+      <section className="page-content">
         <h1>Welcome to Project Onion!</h1>
         <p className="welcome-user">Signed in as {loggedInUser}</p>
-        <p>We aim to help students draw better connections between difficult concepts.
-          To start off, upload your notes or any relevant materials.</p>
+        <p>
+          We aim to help students draw better connections between difficult concepts.
+          To start off, upload your notes or any relevant materials.
+        </p>
 
-      <button type="button" className="upload-button" onClick={handleButtonClick}>
-        Upload Your Notes
-      </button>
-      <div style={{ width: '100vw', height: '100vh', background: '#0b0f19' }}>
-      <NetworkScene />
-    </div>
+        <button type="button" className="upload-button" onClick={handleButtonClick}>
+          Upload Your Notes
+        </button>
+      </section>
+
+      {/* Keep the canvas mounted so the universe starts blank instead of appearing late. */}
+      <section className="network-panel" aria-label="Concept network preview">
+        <NetworkScene uploadedFile={uploadedFile} />
+      </section>
 
       {showPopup && (
         <div className="popup-overlay" role="presentation">

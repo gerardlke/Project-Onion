@@ -3,12 +3,37 @@
 }
 
 .app {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
   min-height: 100vh;
+  padding: 32px 18px 44px;
   text-align: center;
 }
 
 .login-page {
   padding-top: 1px;
+}
+
+.page-content {
+  max-width: 980px;
+  width: min(100%, 980px);
+}
+
+.network-panel {
+  background: #0b0f19;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  height: clamp(300px, 48vh, 520px);
+  overflow: hidden;
+  width: min(100%, 980px);
+}
+
+.network-panel canvas {
+  display: block;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .welcome-user {
@@ -23,7 +48,8 @@ h1 {
   color: white;
   text-align: center;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 60px;
+  font-size: clamp(36px, 6vw, 60px);
+  margin: 0 0 18px;
 }
 
 .upload-button {
@@ -42,7 +68,7 @@ p {
   color: white;
   text-align: center;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 24px;
+  font-size: clamp(18px, 2.6vw, 24px);
 }
 
 .popup-overlay {
