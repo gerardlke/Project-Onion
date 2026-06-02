@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
 )
 from sqlalchemy.orm import relationship
+from pgvector.sqlalchemy import Vector
 
 from app.db.database import Base
 
@@ -128,11 +129,7 @@ class Concepts(Base):
 
     # Concept information
     concept = Column(String, nullable=False)
-
-    # Vector coordinates
-    x = Column(Float)
-    y = Column(Float)
-    z = Column(Float, nullable=True)
+    embedding = Column(Vector(384), nullable=False)
 
     # Table relationships 
     documents = relationship(
