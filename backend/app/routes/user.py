@@ -4,16 +4,23 @@ from fastapi import (
     Depends,
     HTTPException,
 )
+from fastapi.security import OAuth2PasswordBearer
 
+from app.services.authenticate import (
+    hash_password,
+    verify_password,
+    create_access_token    
+)
 from app.db.session import get_db
 from app.db.operations import (
     create_user,
-    get_user_by_username,
+    get_user_by_username
 )
 from app.schemas.user import (
     CreateUserRequest,
     LoginRequest,
-    UserResponse,
+    NewUserResponse,
+    TokenResponse
 )
 from app.logging import setup_logger
 
@@ -22,7 +29,7 @@ from app.logging import setup_logger
 logger = setup_logger(__name__)
 router = APIRouter()
 
-@router.post("/create", response_model=UserResponse)
+@router.post("/create", response_model=NewUserResponse)
 async def create_user_request(
     request: CreateUserRequest,
     db: Session = Depends(get_db)
@@ -38,22 +45,22 @@ async def create_user_request(
         request.username
     )
 
-    print("existing_user", existing_user)
-
     if existing_user:
         raise HTTPException(
             status_code=400,
             detail="Username already exists"
         )
 
+    hashed_password = hash_password(request.password)
+
     user = create_user(
         db,
         request.username
-    )
+        hashed_password
+    )   
     logger.info(f"Created new user with username {request.username}")
-    print("user", user)
 
-    return UserResponse(
+    return NewUserResponse(
         id=user.id,
         username=user.username
     )
@@ -80,9 +87,18 @@ async def login_route(
             status_code=404,
             detail="User not found"
         )
-    logger.info(f"Found user with username {request.username}")
 
-    return UserResponse(
-        id=user.id,
-        username=user.username
+    if not verify_password(request.password, user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect password entered"
+        )
+    logger.info(f"User '{request.username}' verified.")
+
+    access_token = create_access_token(user.id, os.getenv("JWT_EXPIRE_MINUTES"))
+    logger.info(f"Authentication token for '{request.username}' created.")
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer"
     )

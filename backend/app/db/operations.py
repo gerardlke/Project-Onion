@@ -45,7 +45,20 @@ def get_user_by_username(db: Session, username: str):
         .first()
     )
 
-def create_user(db: Session, username: str):
+def get_user_by_id(db: Session, id: int):
+    """Database operation to get a user in User table via id
+
+    Input:
+
+    Ouput:
+    """
+    return (
+        db.query(User)
+        .filter(User.id == id)
+        .first()
+    )
+
+def create_user(db: Session, username: str, password_hash: str):
     """Database operation to create a user in User table
 
     Input:
@@ -54,6 +67,7 @@ def create_user(db: Session, username: str):
     """
     user = User(
         username=username
+        password_hash=password_hash
     )
     db.add(user)
     db.commit()

@@ -5,6 +5,8 @@ from fastapi import (
     HTTPException,
 )
 
+from app.logging import setup_logger
+from app.pipelines.authentication_pipeline import get_current_user
 from app.db.session import get_db
 from app.db.operations import (
     get_all_concepts,
@@ -15,16 +17,17 @@ from app.schemas.universe import (
     UniverseResponse,
     NodeDetailResponse
 )
-from app.logging import setup_logger
 
 
 ### Set up API and logger
 logger = setup_logger(__name__)
 router = APIRouter()
 
+
 @router.get("/nodes", response_model=UniverseResponse)
 async def get_universe_nodes(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """API Route for extracting concept nodes from backend
 
@@ -67,7 +70,8 @@ async def get_universe_nodes(
 @router.get("/node/{concept_id}", response_model=NodeDetailResponse)
 async def get_node_detail(
     concept_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """API Route for extracting concept node data from backend
 

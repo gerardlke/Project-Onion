@@ -9,8 +9,9 @@ from fastapi import (
 )
 
 from app.logging import setup_logger
-from app.pipelines.upload_pipeline import process_document
 from app.schemas.upload import UploadResponse
+from app.pipelines.upload_pipeline import process_document
+from app.pipelines.authentication_pipeline import get_current_user
 from app.db.session import get_db
 
 
@@ -25,10 +26,12 @@ from app.configs.config import (
 logger = setup_logger(__name__)
 router = APIRouter()
 
+
 @router.post("/", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """API Route for uploading new document
 

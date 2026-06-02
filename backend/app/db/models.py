@@ -19,6 +19,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
 
     documents = relationship(
         "Document",
