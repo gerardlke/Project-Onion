@@ -11,66 +11,188 @@ from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 
-class User(Base):
+class Users(Base):
     """
-    Schema for User table in db, one-to-many relationship with Documents
+    Schema for Users table in db, 
+    one-to-many relationship with Documents
     """
     __tablename__ = "users"
 
+    # Metadata
     id = Column(Integer, primary_key=True)
+
+    # User information
     username = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
 
+    # Table relationships 
     documents = relationship(
-        "Document",
-        back_populates="user",
+        "Documents",
+        back_populates="users",
         cascade="all, delete"
     )
 
 
-class Document(Base):
+class Topics(Base):
     """
-    Schema for Document table in db, many-to-many relationship with Concepts
+    Schema for Topics table in db,
+    one-to-many relationship with Documents
+    """
+    __tablename__ = "topics"
+
+    # Metadata
+    id = Column(Integer, primary_key=True)
+
+    # Topic information
+    name = Column(String, unique=True, nullable=False)
+    description = Column(String)
+    
+    # Table relations
+    documents = relationship(
+        "Documents",
+        back_populates="topics",
+        cascade="all, delete"
+    )
+
+
+class Documents(Base):
+    """
+    Schema for Documents table in db, 
+    many-to-many relationship with DocumentsToConcepts
     """
     __tablename__ = "documents"
 
+    # Metadata
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    topic_id = Column(Integer, ForeignKey("topics.id"))
+
+    # Document information
     filename = Column(String, nullable=False)
     content_type = Column(String)
     raw_text = Column(Text)
 
-    user = relationship(
-        "User",
+    # Table relationships 
+    users = relationship(
+        "Users",
+        back_populates="documents"
+    )
+
+    topics = relationship(
+        "Topics",
         back_populates="documents"
     )
 
     concepts = relationship(
-        "Concept",
-        back_populates="document",
+        "Concepts",
+        back_populates="documents",
         cascade="all, delete"
     )
 
 
-class Concept(Base):
+class DocumentsToConcepts(Base):
     """
-    Schema for Concept table in db
+    Schema for DocumentsToConcepts table in db
+    """
+    __tablename__ = "documentToConcepts"
+
+    # Metadata
+    document_id = Column(
+        Integer,
+        ForeignKey("documents.id"),
+        primary_key=True
+    )
+
+    concept_id = Column(
+        Integer,
+        ForeignKey("concepts.id"),
+        primary_key=True
+    )
+
+    # Relationship information
+    chunk_index = Column(Integer)
+
+
+
+class Concepts(Base):
+    """
+    Schema for Concepts table in db, 
+    many-to-many relationship with DocumentsToConcepts
+    one-to-one relationship with Relations
     """
     __tablename__ = "concepts"
 
     # Metadata
     id = Column(Integer, primary_key=True)
     document_id = Column(Integer, ForeignKey("documents.id"))
-    chunk_index = Column(Integer)
+
+    # Concept information
     concept = Column(String, nullable=False)
-    frequency = Column(Integer)
 
     # Vector coordinates
     x = Column(Float)
     y = Column(Float)
     z = Column(Float, nullable=True)
 
-    document = relationship(
-        "Document",
+    # Table relationships 
+    documents = relationship(
+        "Documents",
         back_populates="concepts"
+    )
+
+    relations = relationship(
+        "Relations",
+        back_populates="concepts",
+        cascade="all, delete"
+    )
+
+
+class Relations(Base):
+    """
+    Schema for Relations table in db, 
+    many-to-one relationship with RelationTypes
+    """
+    __tablename__ = "Relations"
+    
+    # Metadata
+    id = Column(Integer, primary_key=True)
+
+    # Concept to concept relationship
+    source_concept = Column(Integer, ForeignKey("concepts.id"), nullable=False)
+    target_concept = Column(Integer, ForeignKey("concepts.id"), nullable=False)
+    relation_type = Column(Integer, ForeignKey("relation_types.id"), nullable=False)
+
+    # Relation information
+    weight = Column(Float)
+
+    # Table relationships 
+    source_concepts = relationship(
+        "Concepts",
+        foreign_keys=[source_concept]
+    )
+
+    relation_types = relationship(
+        "RelationTypes",
+        foreign_keys=[target_concept]
+    )
+
+
+class RelationTypes(Base):
+    """
+    Schema for RelationTypes table in db
+    """
+    __tablename__ = "RelationType"
+
+    # Metadata
+    id = Column(Integer, primary_key=True)
+
+    # RelationType information
+    name = Column(String, unique=True, nullable=False)
+    description = Column(String)
+
+    # Table relationships 
+    relations = relationship(
+        "Relations",
+        back_populates="relation_types",
+        cascade="all, delete"
     )

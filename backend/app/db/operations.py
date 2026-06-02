@@ -129,6 +129,18 @@ def get_all_concepts(db: Session):
     """
     return db.query(Concept).all()
 
+def get_all_concepts_by_userid(db: Session, userid: int):
+    """Database operation to get all unique concepts from Concept table
+
+    Input:
+
+    Ouput:
+    """
+    return (
+        db.query(Concept)
+        .filter()
+    )
+
 def get_concept_by_id(db: Session, concept_id: int):
     """Database operation to get a specific concept from Concept table
 

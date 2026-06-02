@@ -9,7 +9,7 @@ from app.logging import setup_logger
 from app.pipelines.authentication_pipeline import get_current_user
 from app.db.session import get_db
 from app.db.operations import (
-    get_all_concepts,
+    get_all_concepts_by_userid,
     get_concept_by_id
 )
 from app.schemas.universe import (
@@ -40,7 +40,7 @@ async def get_universe_nodes(
 
         # Extract key node metadata from db
         nodes = []
-        for concept in get_all_concepts(db):
+        for concept in get_all_concepts_by_userid(db, user.id):
 
             nodes.append(
                 UniverseNode(
@@ -70,8 +70,7 @@ async def get_universe_nodes(
 @router.get("/node/{concept_id}", response_model=NodeDetailResponse)
 async def get_node_detail(
     concept_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """API Route for extracting concept node data from backend
 
