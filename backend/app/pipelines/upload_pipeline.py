@@ -5,60 +5,72 @@ from app.services.chunk import chunk_text
 from app.services.concepts import extract_concepts
 from app.services.embed import generate_embeddings, reduce_dimensions
 
-from app.db.operations import create_document, create_concepts
+from app.db.operations import (
+    create_topic,
+    get_topic_by_name,
+    create_document,
+    create_batch_concept,
+    create_batch_document_to_concept
+)
 from app.schemas.upload import PipelineDocument
 
 
-async def process_document(file: UploadFile, db, **kwargs):
+async def create_topic(name: str, description: str, db, user, **kwargs):
+    """Function to create a new topic before uploading file
+
+    Input:
+
+    Ouput:
+    """
+    # Saving new topic to db
+    new_topic = create_topic(db, user.id, name, description)
+    return new_topic
+
+
+async def process_document(file: UploadFile, topic_name: str, db, user, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:
 
     Ouput:
     """
-    # Extraction pipeline
+    # Extract raw text and save topic/document to db first
     raw_text = await extract_text(file)
-    chunks = chunk_text(raw_text)
-    concepts = extract_concepts(chunks)
+    
+    topic = get_topic_by_name(topic_name)
 
-    # Embedding and reducing to get latent positions in universe
-    concept_strings = [concept.concept for concept in concepts]
-    embeddings = generate_embeddings(
-        concept_strings
-    )
-    coordinates = reduce_dimensions(
-        embeddings,
-        dimensions=3
-    )
-    for concept, coordinate in zip(concepts, coordinates):
-        concept.x = float(coordinate[0])
-        concept.y = float(coordinate[1])
-        concept.z = float(coordinate[2])
-
-    # Build internal object
-    pipeline_document = PipelineDocument(
-        filename=file.filename,
-        content_type=file.content_type,
-        raw_text=raw_text,
-        chunks=chunks,
-        concepts=concepts
-    )
-
-    # Save to DB
     document = create_document(
         db=db,
+        user_id=user.id,
+        topic_id=topic.id
         filename=file.filename,
         raw_text=raw_text
     )
-    create_concepts(
+
+    # Chunk and embed raw text
+    chunks = chunk_text(raw_text)
+    concepts = extract_concepts(chunks)
+    embeddings = generate_embeddings(
+        [concept.concept for concept in concepts]
+    )
+
+    # Save concepts to db in batches
+    concepts = create_batch_concept(
         db=db,
         document_id=document.id,
-        pipeline_document=pipeline_document
+        concepts=concepts,
+        embeddings=embeddings
+    )
+
+    create_batch_document_to_concept(
+        db=db,
+        document_id=document.id,
+        concept_ids=concept.id
     )
 
     # Return metadata to upload route
     return {
         "id": document.id,
         "chunks": len(chunks),
-        "concepts": len(concepts)
+        "concepts": concepts
     }

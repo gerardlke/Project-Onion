@@ -9,10 +9,18 @@ from fastapi import (
 )
 
 from app.logging import setup_logger
-from app.schemas.upload import UploadResponse
-from app.pipelines.upload_pipeline import process_document
-from app.pipelines.authentication_pipeline import get_current_user
+from app.schemas.upload import (
+    UploadResponse,
+    NewTopicResponse,
+    GetTopicResponse
+)
 from app.db.session import get_db
+from app.db.operations import get_all_topics_by_userid
+from app.pipelines.authentication_pipeline import get_current_user
+from app.pipelines.upload_pipeline import (
+    process_document
+    create_topic
+)
 
 
 ### Set up configs
@@ -27,11 +35,97 @@ logger = setup_logger(__name__)
 router = APIRouter()
 
 
-@router.post("/", response_model=UploadResponse)
+@router.post("/new_topic", response_model=NewTopicResponse)
+async def upload_topic(
+    name: str,
+    description: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """API Route for creating a new topic of study
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        new_topic = await create_topic(
+            name=name,
+            description=description,
+            db=db,
+            user=user
+        )
+        logger.info(f"Created new topic '{new_topic.name}'.")
+
+        # Response model
+        return NewTopicResponse(
+            success=True,
+            name=new_topic.name,
+            description=new_topic.description
+        )
+
+    except HTTPException as http_error:
+        logger.warning(
+            f"HTTP error: {http_error.detail}"
+        )
+        raise http_error
+
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while creating new topic '{name}' due to {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
+@router.post("/get_topics", response_model=GetTopicResponse)
+async def get_all_topics(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """API Route for retrieving all topics inserted by user
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        all_topics = await get_all_topics_by_userid(
+            db=db,
+            user_id=user.id
+        )
+        logger.info(f"Retrieved {len(all_topics)} topics.")
+
+        # Response model
+        return GetTopicResponse(
+            success=True,
+            topics=all_topics
+        )
+
+    except HTTPException as http_error:
+        logger.warning(
+            f"HTTP error: {http_error.detail}"
+        )
+        raise http_error
+
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while retrieving all topics due to {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
+@router.post("/new_document", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
+    topic_name: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user)
 ):
     """API Route for uploading new document
 
@@ -62,7 +156,9 @@ async def upload_document(
         logger.info("Starting file processing.")
         metadata = await process_document(
             file=file,
-            db=db
+            topic_name=topic_name,
+            db=db,
+            user=user
         )
 
         logger.info("Finished file upload.")
@@ -70,12 +166,13 @@ async def upload_document(
         # Response model
         return UploadResponse(
             success=True,
+            topic=topic_name,
             filename=file.filename,
             content_type=file.content_type,
             size_mb=file.size,
             document_id=metadata.get("id", -1),
             num_chunks=metadata.get("chunks", -1),
-            num_concepts=metadata.get("concepts", -1)
+            concepts=metadata.get("concepts", -1)
         )
 
     except HTTPException as http_error:

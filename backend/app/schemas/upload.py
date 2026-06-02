@@ -2,27 +2,25 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class ExtractedConcept(BaseModel):
-    concept: str
-    frequency: int
-    chunk_index: Optional[int] = None
-    x: float | None = None
-    y: float | None = None
-    z: float | None = None
+class NewTopicResponse(BaseModel):
+    success: bool
+    name: str
+    description: str
 
-class PipelineDocument(BaseModel):
-    filename: str
-    content_type: str
-    raw_text: str
-    chunks: list[str]
-    concepts: list[ExtractedConcept]
+class TopicResponse(BaseModel):
+    name: str
+    description: str
 
+class GetTopicResponse(BaseModel):
+    success: bool
+    topics: list[TopicResponse]
 
 class UploadResponse(BaseModel):
     success: bool
+    topic: str
     filename: str
     content_type: str
     size_mb: float
     document_id: int
     num_chunks: int
-    num_concepts: int
+    concepts: str

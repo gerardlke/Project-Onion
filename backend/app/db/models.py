@@ -43,6 +43,7 @@ class Topics(Base):
 
     # Metadata
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
 
     # Topic information
     name = Column(String, unique=True, nullable=False)
@@ -65,7 +66,6 @@ class Documents(Base):
 
     # Metadata
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
     topic_id = Column(Integer, ForeignKey("topics.id"))
 
     # Document information
@@ -114,7 +114,6 @@ class DocumentsToConcepts(Base):
     chunk_index = Column(Integer)
 
 
-
 class Concepts(Base):
     """
     Schema for Concepts table in db, 
@@ -155,8 +154,8 @@ class Relations(Base):
     id = Column(Integer, primary_key=True)
 
     # Concept to concept relationship
-    source_concept = Column(Integer, ForeignKey("concepts.id"), nullable=False)
-    target_concept = Column(Integer, ForeignKey("concepts.id"), nullable=False)
+    source_id = Column(Integer, ForeignKey("concepts.id"), nullable=False)
+    target_id = Column(Integer, ForeignKey("concepts.id"), nullable=False)
     relation_type = Column(Integer, ForeignKey("relation_types.id"), nullable=False)
 
     # Relation information
@@ -165,12 +164,12 @@ class Relations(Base):
     # Table relationships 
     source_concepts = relationship(
         "Concepts",
-        foreign_keys=[source_concept]
+        foreign_keys=[source_id]
     )
 
     relation_types = relationship(
         "RelationTypes",
-        foreign_keys=[target_concept]
+        foreign_keys=[target_id]
     )
 
 
