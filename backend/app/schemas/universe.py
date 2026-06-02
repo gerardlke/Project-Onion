@@ -2,6 +2,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class TopicResponse(BaseModel):
+
+
 class UniverseNode(BaseModel):
     id: int
     concept: str
@@ -10,7 +13,7 @@ class UniverseNode(BaseModel):
     y: float
     z: float | None
 
-class UniverseResponse(BaseModel):
+class NodeResponse(BaseModel):
     nodes: list[UniverseNode]
 
 class NodeDetailResponse(BaseModel):
@@ -22,3 +25,6 @@ class NodeDetailResponse(BaseModel):
     x: float
     y: float
     z: float | None
+
+class RelationResponse(BaseModel):
+    

@@ -13,9 +13,11 @@ from app.db.operations import (
     get_concept_by_id
 )
 from app.schemas.universe import (
+    TopicResponse,
     UniverseNode,
-    UniverseResponse,
-    NodeDetailResponse
+    NodeResponse,
+    NodeDetailResponse,
+    RelationResponse
 )
 
 
@@ -24,8 +26,36 @@ logger = setup_logger(__name__)
 router = APIRouter()
 
 
+@router.get("/topics", response_model=TopicResponse)
+async def get_universe_topics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """API Route for extracting all topics from backend
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        logger.info("Extracting topics.")
+
+        return TopicResponse(
+        )
+
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while extracting topics for universe: {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
 @router.get("/nodes", response_model=UniverseResponse)
 async def get_universe_nodes(
+    dimensions: int = 3,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -39,7 +69,7 @@ async def get_universe_nodes(
         logger.info("Extracting concept nodes.")
 
         # Extract key node metadata from db
-        nodes = []
+        nodes = []  
         for concept in get_all_concepts_by_userid(db, user.id):
 
             nodes.append(
@@ -105,6 +135,33 @@ async def get_node_detail(
     except Exception as error:
         logger.exception(
             f"Unexpected error while extracting node internal data due to {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
+@router.get("/relations", response_model=RelationResponse)
+async def get_universe_topics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """API Route for extracting all relations from backend
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        logger.info("Extracting relations.")
+
+        return RelationResponse(
+        )
+
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while extracting relations for universe: {error}"
         )
         raise HTTPException(
             status_code=500,
