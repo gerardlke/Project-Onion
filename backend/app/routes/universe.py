@@ -9,12 +9,17 @@ from app.logging import setup_logger
 from app.pipelines.authentication_pipeline import get_current_user
 from app.db.session import get_db
 from app.db.operations import (
-    get_all_concepts_by_userid,
-    get_concept_by_id
+    get_all_topics_by_user_id,
+    get_topic_by_document_id,
+    get_all_concepts_by_user_id,
+    get_concept_by_id,
+    get_all_relations_by_user_id,
+    get_relation_by_id
 )
 from app.schemas.universe import (
+    TopicNode,
     TopicResponse,
-    UniverseNode,
+    ConceptNode,
     NodeResponse,
     NodeDetailResponse,
     RelationResponse
@@ -29,18 +34,30 @@ router = APIRouter()
 @router.get("/topics", response_model=TopicResponse)
 async def get_universe_topics(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user)
 ):
-    """API Route for extracting all topics from backend
+    """API Route for extracting all topics from backend to populate universe
 
     Input:
 
     Ouput:
     """
     try:
-        logger.info("Extracting topics.")
+        logger.info(f"Extracting all topics for user '{user.name}'.")
+
+        # Extract all topics from db then format into TopicNodes
+        all_topics = [
+            TopicNode(
+                id=topic["id"],
+                name=topic["name"]
+                description=topic["description"]
+            ) for topic in get_all_topics_by_user_id(db, user.id)
+        ]
+
+        logger.info(f"Extracted {len(all_topics)} topic nodes.")
 
         return TopicResponse(
+            nodes=all_topics
         )
 
     except Exception as error:
@@ -53,39 +70,35 @@ async def get_universe_topics(
         )
 
 
-@router.get("/nodes", response_model=UniverseResponse)
+@router.get("/nodes", response_model=NodeResponse)
 async def get_universe_nodes(
     dimensions: int = 3,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user)
 ):
-    """API Route for extracting concept nodes from backend
+    """API Route for extracting all concept nodes from backend to populate universe
 
     Input:
 
     Ouput:
     """
     try:
-        logger.info("Extracting concept nodes.")
+        logger.info(f"Extracting concept nodes for user '{user.name}'.")
 
-        # Extract key node metadata from db
-        nodes = []  
-        for concept in get_all_concepts_by_userid(db, user.id):
+        # Extract all concepts from db then format into ConceptNodes
+        all_concepts = [
+            ConceptNode(
+                id=concept["id"],
+                document_id=concept["document_id"]
+                topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
+                coordinates=[]  # TODO: Calculate and include node coordinates
+            ) for concept in get_all_concepts_by_user_id(db, user.id)
+        ]
 
-            nodes.append(
-                UniverseNode(
-                    id=concept.id,
-                    concept=concept.concept,
-                    frequency=concept.frequency,
+        logger.info(f"Extracted {len(all_concepts)} concept nodes.")
 
-                    x=concept.x,
-                    y=concept.y,
-                    z=concept.z
-                )
-            )
-
-        return UniverseResponse(
-            nodes=nodes
+        return NodeResponse(
+            nodes=all_concepts
         )
 
     except Exception as error:
@@ -102,17 +115,14 @@ async def get_node_detail(
     concept_id: int,
     db: Session = Depends(get_db)
 ):
-    """API Route for extracting concept node data from backend
+    """API Route for extracting specific concept node data from backend
 
     Input:
 
     Ouput:
     """
     try:
-        concept = get_concept_by_id(
-            db,
-            concept_id
-        )
+        concept = get_concept_by_id(db, concept_id)
 
         if not concept:
             raise HTTPException(
@@ -121,16 +131,8 @@ async def get_node_detail(
             )
 
         return NodeDetailResponse(
-            id=concept.id,
-            concept=concept.concept,
-            frequency=concept.frequency,
-            chunk_index=concept.chunk_index,
-
-            x=concept.x,
-            y=concept.y,
-            z=concept.z,
-
-            document_id=concept.document_id
+            id=concept["id"],
+            concept=concept["concept"]
         )
     except Exception as error:
         logger.exception(
@@ -145,18 +147,62 @@ async def get_node_detail(
 @router.get("/relations", response_model=RelationResponse)
 async def get_universe_topics(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user)
 ):
-    """API Route for extracting all relations from backend
+    """API Route for extracting all relations from backend to populate universe
 
     Input:
 
     Ouput:
     """
     try:
-        logger.info("Extracting relations.")
+        logger.info(f"Extracting all relations for user '{user.name}'.")
+        relations = get_all_relations_by_user_id(db, user.id)
+
+        all_relations = [
+            RelationEdge(
+                id=relation["relation_id"],
+                source_id=relation["source_id"]
+                target_id=relation["target_id"]
+                name=relation["name"]
+            ) for relation in relations
+        ]
 
         return RelationResponse(
+            edges=all_relations
+        )
+
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while extracting relations for universe: {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
+
+
+@router.get("/relation/{relation_id}", response_model=RelationDetailResponse)
+async def get_universe_topics(
+    relation_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """API Route for extracting specific details for a relation edge
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        logger.info(f"Extracting relation information for relation id '{relation_id}'.")
+        relation = get_relation_by_id(db, relation_id)
+
+        return RelationDetailResponse(
+            id=relation["id"],
+            name=relation["name"],
+            description=relation["description"],
+            explanation=relation["explanation"]
         )
 
     except Exception as error:

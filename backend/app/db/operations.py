@@ -233,7 +233,7 @@ def get_all_concepts_by_user_id(db: Session, user_id: int):
     Ouput:
     """
     query = """
-        SELECT DISTINCT * 
+        SELECT concepts.id AS id, concepts.document_id AS document_id, concepts.embedding AS embedding
         FROM concepts
         INNER JOIN documents ON documents.id = concepts.document_id
         INNER JOIN topics ON topics.id = documents.topic_id

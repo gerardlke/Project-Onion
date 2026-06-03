@@ -9,8 +9,7 @@ from app.db.operations import (
     create_topic,
     get_topic_by_name,
     create_document,
-    create_batch_concept,
-    create_batch_document_to_concept
+    create_batch_concept
 )
 from app.schemas.upload import PipelineDocument
 
@@ -60,12 +59,6 @@ async def process_document(file: UploadFile, topic_name: str, db, user, **kwargs
         document_id=document.id,
         concepts=concepts,
         embeddings=embeddings
-    )
-
-    create_batch_document_to_concept(
-        db=db,
-        document_id=document.id,
-        concept_ids=concept.id
     )
 
     # Return metadata to upload route
