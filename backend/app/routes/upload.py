@@ -15,12 +15,12 @@ from app.schemas.upload import (
     GetTopicResponse
 )
 from app.db.session import get_db
-from app.db.operations import get_all_topics_by_user_id
-from app.pipelines.authentication_pipeline import get_current_user
-from app.pipelines.upload_pipeline import (
-    process_document
-    create_topic
+from app.db.operations import (
+    create_topic,
+    get_all_topics_by_user_id
 )
+from app.pipelines.authentication_pipeline import get_current_user
+from app.pipelines.upload_pipeline import process_document
 
 
 ### Set up configs
@@ -49,13 +49,8 @@ async def upload_topic(
     Ouput:
     """
     try:
-        new_topic = await create_topic(
-            name=name,
-            description=description,
-            db=db,
-            user=user
-        )
-        logger.info(f"Created new topic '{new_topic["name"]}'.")
+        new_topic = create_topic(db, user.id, name, description)
+        logger.info(f"Created new topic '{name}'.")
 
         # Response model
         return NewTopicResponse(

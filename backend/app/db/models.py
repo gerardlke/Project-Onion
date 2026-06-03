@@ -102,7 +102,7 @@ class Concepts(Base):
     # Metadata
     id = Column(Integer, primary_key=True)
     document_id = Column(Integer, ForeignKey("documents.id"))
-    chunk_index = Column(Integer4)
+    chunk_index = Column(Integer)
 
     # Concept information
     concept = Column(String, nullable=False)

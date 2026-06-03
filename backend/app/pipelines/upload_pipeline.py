@@ -6,24 +6,11 @@ from app.services.concepts import extract_concepts
 from app.services.embed import generate_embeddings, reduce_dimensions
 
 from app.db.operations import (
-    create_topic,
     get_topic_by_name,
     create_document,
     create_batch_concept
 )
 from app.schemas.upload import PipelineDocument
-
-
-async def create_topic(name: str, description: str, db, user, **kwargs):
-    """Function to create a new topic before uploading file
-
-    Input:
-
-    Ouput:
-    """
-    # Saving new topic to db
-    new_topic = create_topic(db, user.id, name, description)
-    return new_topic
 
 
 async def process_document(file: UploadFile, topic_name: str, db, user, **kwargs):
