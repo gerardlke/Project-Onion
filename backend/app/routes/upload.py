@@ -150,10 +150,10 @@ async def upload_document(
         # Run pipeline
         logger.info("Starting file processing.")
         metadata = await process_document(
-            file=file,
-            topic_name=topic_name,
             db=db,
-            user=user
+            user=user,
+            file=file,
+            topic_name=topic_name
         )
 
         logger.info("Finished file upload.")

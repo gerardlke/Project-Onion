@@ -13,7 +13,7 @@ from app.db.operations import (
 from app.schemas.upload import PipelineDocument
 
 
-async def process_document(file: UploadFile, topic_name: str, db, user, **kwargs):
+async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:

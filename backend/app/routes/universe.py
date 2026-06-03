@@ -7,6 +7,7 @@ from fastapi import (
 
 from app.logging import setup_logger
 from app.pipelines.authentication_pipeline import get_current_user
+from app.pipelines.universe_pipeline import project_embedding
 from app.db.session import get_db
 from app.db.operations import (
     get_all_topics_by_user_id,
@@ -89,9 +90,9 @@ async def get_universe_nodes(
         all_concepts = [
             ConceptNode(
                 id=concept["id"],
-                document_id=concept["document_id"]
+                document_id=concept["document_id"],
                 topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
-                coordinates=[]  # TODO: Calculate and include node coordinates
+                coordinates=project_embedding(dimensions, concept["embedding"])["coordinates"]
             ) for concept in get_all_concepts_by_user_id(db, user.id)
         ]
 
@@ -109,6 +110,7 @@ async def get_universe_nodes(
             status_code=500,
             detail="Internal server error"
         )
+
 
 @router.get("/node/{concept_id}", response_model=NodeDetailResponse)
 async def get_node_detail(
