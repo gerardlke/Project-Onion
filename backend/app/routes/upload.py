@@ -15,7 +15,7 @@ from app.schemas.upload import (
     GetTopicResponse
 )
 from app.db.session import get_db
-from app.db.operations import get_all_topics_by_userid
+from app.db.operations import get_all_topics_by_user_id
 from app.pipelines.authentication_pipeline import get_current_user
 from app.pipelines.upload_pipeline import (
     process_document
@@ -42,7 +42,7 @@ async def upload_topic(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """API Route for creating a new topic of study
+    """API Route for creating a new topic of study for selection when uploading notes
 
     Input:
 
@@ -55,13 +55,13 @@ async def upload_topic(
             db=db,
             user=user
         )
-        logger.info(f"Created new topic '{new_topic.name}'.")
+        logger.info(f"Created new topic '{new_topic["name"]}'.")
 
         # Response model
         return NewTopicResponse(
             success=True,
-            name=new_topic.name,
-            description=new_topic.description
+            name=new_topic["name"],
+            description=new_topic["description"]
         )
 
     except HTTPException as http_error:
@@ -85,14 +85,14 @@ async def get_all_topics(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """API Route for retrieving all topics inserted by user
+    """API Route for retrieving all topics inserted by user for selection during file upload
 
     Input:
 
     Ouput:
     """
     try:
-        all_topics = await get_all_topics_by_userid(
+        all_topics = await get_all_topics_by_user_id(
             db=db,
             user_id=user.id
         )

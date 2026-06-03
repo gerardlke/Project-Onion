@@ -102,6 +102,7 @@ class Concepts(Base):
     # Metadata
     id = Column(Integer, primary_key=True)
     document_id = Column(Integer, ForeignKey("documents.id"))
+    chunk_index = Column(Integer4)
 
     # Concept information
     concept = Column(String, nullable=False)
@@ -153,9 +154,9 @@ class Relations(Base):
 
 class RelationTypes(Base):
     """
-    Schema for RelationTypes table in db
+    Schema for Relation Types table in db
     """
-    __tablename__ = "relationType"
+    __tablename__ = "relation_types"
 
     # Metadata
     id = Column(Integer, primary_key=True)

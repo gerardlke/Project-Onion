@@ -323,20 +323,20 @@ def get_relation_by_id(db: Session, id: int):
     query = """
         SELECT 
             relations.id AS id, 
-            relationTypes.name AS name,
-            relationTypes.description AS description,
+            relation_types.name AS name,
+            relation_types.description AS description,
             relations.explanation AS explanation
         FROM relations
-        INNER JOIN relationTypes ON relations.relation_type_id == relationTypes.id
+        INNER JOIN relation_types ON relations.relation_type_id == relation_types.id
         WHERE relations.id == :id
     """
     return execute_select(db, query, {"id": id})
 
 
-### RelationTypes queries =======================
+### Relation Types queries ======================
 
 def create_relation_type(db: Session, name: str, description: str):
-    """Database operation to create a new relation type in RelationTypes table
+    """Database operation to create a new relation type in Relation Types table
 
     Input:
 
