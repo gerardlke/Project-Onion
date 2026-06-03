@@ -61,8 +61,8 @@ async def create_user_request(
     logger.info(f"Created new user with username {request.username}")
 
     return NewUserResponse(
-        id=user.id,
-        username=user.username
+        id=user["id"],
+        username=user["username"]
     )
 
 
@@ -88,7 +88,7 @@ async def login_route(
             detail="User not found"
         )
 
-    if not verify_password(request.password, user.hashed_password):
+    if not verify_password(request.password, user["password_hash"]):
         raise HTTPException(
             status_code=401,
             detail="Incorrect password entered"

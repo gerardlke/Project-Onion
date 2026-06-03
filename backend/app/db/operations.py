@@ -163,10 +163,10 @@ def get_topic_by_document_id(db: Session, document_id: int):
     Ouput:
     """
     query = """
-        SELECT t.* 
-        FROM topics t
-        INNER JOIN documents d ON t.id = d.topic_id
-        WHERE d.id = :document_id
+        SELECT * 
+        FROM topics
+        INNER JOIN documents ON topics.id = documents.topic_id
+        WHERE documents.id = :document_id
     """
     return execute_select(db, query, {"document_id": document_id})
 
@@ -233,11 +233,11 @@ def get_all_concepts_by_user_id(db: Session, user_id: int):
     Ouput:
     """
     query = """
-        SELECT DISTINCT c.* 
-        FROM concepts c
-        INNER JOIN documents d ON d.id = c.document_id
-        INNER JOIN topics t ON t.id = d.topic_id
-        WHERE t.user_id = :user_id
+        SELECT DISTINCT * 
+        FROM concepts
+        INNER JOIN documents ON documents.id = concepts.document_id
+        INNER JOIN topics ON topics.id = documents.topic_id
+        WHERE topics.user_id = :user_id
     """
     return execute_select(db, query, {"user_id": user_id})
 
@@ -286,9 +286,9 @@ def get_all_relations_by_user_id(db: Session, type_id: int):
     """
     query = """
         SELECT 
-            relations.id AS relation_id,
-            relations.source_id,
-            relations.target_id,
+            relations.id AS relation_id AS relation_id,
+            relations.source_id AS source_id,
+            relations.target_id AS target_id,
             relation_types.name AS name
         FROM relations
         INNER JOIN relation_types ON relations.relation_type = relation_types.id
@@ -301,10 +301,10 @@ def get_all_relations_by_user_id(db: Session, type_id: int):
 
         SELECT 
             relations.id AS relation_id,
-            relations.source_id,
-            relations.target_id,
+            relations.source_id AS source_id,
+            relations.target_id AS target_id,
             relation_types.name AS name
-        FROM relations r
+        FROM relations
         INNER JOIN relation_types ON relations.relation_type = relation_types.id
         INNER JOIN concepts ON relations.target_id = concepts.id
         INNER JOIN documents ON concepts.document_id = documents.id
@@ -312,6 +312,25 @@ def get_all_relations_by_user_id(db: Session, type_id: int):
         WHERE topics.user_id = :user_id
     """
     return execute_select(db, query, {"user_id": user_id})
+
+def get_relation_by_id(db: Session, id: int):
+    """Database operation to retrieve the all relations for all nodes given a user
+
+    Input:
+
+    Ouput:
+    """
+    query = """
+        SELECT 
+            relations.id AS id, 
+            relationTypes.name AS name,
+            relationTypes.description AS description,
+            relations.explanation AS explanation
+        FROM relations
+        INNER JOIN relationTypes ON relations.relation_type_id == relationTypes.id
+        WHERE relations.id == :id
+    """
+    return execute_select(db, query, {"id": id})
 
 
 ### RelationTypes queries =======================

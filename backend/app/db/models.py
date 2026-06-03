@@ -60,7 +60,7 @@ class Topics(Base):
 class Documents(Base):
     """
     Schema for Documents table in db, 
-    many-to-many relationship with DocumentsToConcepts
+    one-to-many relationship with Concepts
     """
     __tablename__ = "documents"
 
@@ -91,34 +91,11 @@ class Documents(Base):
     )
 
 
-class DocumentsToConcepts(Base):
-    """
-    Schema for DocumentsToConcepts table in db
-    """
-    __tablename__ = "documentToConcepts"
-
-    # Metadata
-    document_id = Column(
-        Integer,
-        ForeignKey("documents.id"),
-        primary_key=True
-    )
-
-    concept_id = Column(
-        Integer,
-        ForeignKey("concepts.id"),
-        primary_key=True
-    )
-
-    # Relationship information
-    chunk_index = Column(Integer)
-
-
 class Concepts(Base):
     """
     Schema for Concepts table in db, 
-    many-to-many relationship with DocumentsToConcepts
-    one-to-one relationship with Relations
+    many-to-one relationship with Documents
+    one-to-many relationship with Relations
     """
     __tablename__ = "concepts"
 
@@ -148,7 +125,7 @@ class Relations(Base):
     Schema for Relations table in db, 
     many-to-one relationship with RelationTypes
     """
-    __tablename__ = "Relations"
+    __tablename__ = "relations"
     
     # Metadata
     id = Column(Integer, primary_key=True)
@@ -156,10 +133,11 @@ class Relations(Base):
     # Concept to concept relationship
     source_id = Column(Integer, ForeignKey("concepts.id"), nullable=False)
     target_id = Column(Integer, ForeignKey("concepts.id"), nullable=False)
-    relation_type = Column(Integer, ForeignKey("relation_types.id"), nullable=False)
+    relation_type_id = Column(Integer, ForeignKey("relation_types.id"), nullable=False)
 
     # Relation information
     weight = Column(Float)
+    explanation = Column(String)
 
     # Table relationships 
     source_concepts = relationship(
@@ -167,8 +145,8 @@ class Relations(Base):
         foreign_keys=[source_id]
     )
 
-    relation_types = relationship(
-        "RelationTypes",
+    target_concepts = relationship(
+        "Concepts",
         foreign_keys=[target_id]
     )
 
@@ -177,7 +155,7 @@ class RelationTypes(Base):
     """
     Schema for RelationTypes table in db
     """
-    __tablename__ = "RelationType"
+    __tablename__ = "relationType"
 
     # Metadata
     id = Column(Integer, primary_key=True)
