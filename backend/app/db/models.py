@@ -105,7 +105,8 @@ class Concepts(Base):
     chunk_index = Column(Integer)
 
     # Concept information
-    concept = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    raw_text = Column(String, nullable=False)
     embedding = Column(Vector(384), nullable=False)
 
     # Table relationships 

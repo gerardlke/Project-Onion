@@ -22,6 +22,7 @@ class NodeResponse(BaseModel):
 class NodeDetailResponse(BaseModel):
     id: int
     concept: str
+    text: str
 
 class RelationEdge(BaseModel):
     id: int

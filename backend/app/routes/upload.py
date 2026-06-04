@@ -167,7 +167,7 @@ async def upload_document(
             size_mb=file.size,
             document_id=metadata.get("id", -1),
             num_chunks=metadata.get("chunks", -1),
-            concepts=metadata.get("concepts", -1)
+            num_concepts=metadata.get("concepts", -1)
         )
 
     except HTTPException as http_error:

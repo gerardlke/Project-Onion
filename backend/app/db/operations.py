@@ -195,7 +195,7 @@ def create_document(db: Session, topic_id: int, filename: str, content_type: str
 
 ### Concepts queries ==================================
 
-def create_batch_concept(db: Session, document_id: int, concepts: list, embeddings: list):
+def create_batch_concept(db: Session, document_id: int, concepts: list, texts: list, embeddings: list):
     """Database operation to insert a batch of entries in Concepts table
 
     Input:
@@ -203,12 +203,12 @@ def create_batch_concept(db: Session, document_id: int, concepts: list, embeddin
     Ouput:
     """
     query = """
-        INSERT INTO concepts (document_id, concept, embedding) 
-        VALUES (:document_id, :concept, :embedding)
+        INSERT INTO concepts (document_id, concept, raw_text, embedding) 
+        VALUES (:document_id, :concept, :raw_text, :embedding)
     """
     params_list = [
-        {"document_id": document_id, "concept": c, "embedding": e}
-        for c, e in zip(concepts, embeddings)
+        {"document_id": document_id, "concept": c, "raw_text": t, "embedding": e}
+        for c, t, e in zip(concepts, texts, embeddings)
     ]
     return execute_batch_insert(db, query, params_list)
 
@@ -254,6 +254,38 @@ def get_concept_by_id(db: Session, concept_id: int):
         WHERE id = :concept_id
     """
     return execute_select(db, query, {"concept_id": concept_id})
+
+def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, threshold: float = 0.5, limit: int = 10):
+    """Database operation to do similarity search on embeddings 
+
+    Input:
+
+    Ouput:
+    """
+    query = """
+        WITH calculated_distances AS (
+            SELECT
+                id,
+                concept,
+                embedding <=> :embedding AS distance
+            FROM concepts
+            WHERE user_id = :user_id
+                AND id != :concept_id
+        )
+        SELECT id, concept, distance
+        FROM calculated_distances
+        WHERE distance <= :distance_threshold
+        ORDER BY distance ASC
+        LIMIT :limit
+    """
+    params = {
+        "embedding": embedding,
+        "user_id": user_id,
+        "concept_id": concept_id,
+        "distance_threshold": threshold,
+        "limit": limit
+    }
+    return execute_select(db, query, params)
 
 
 ### Relations queries =======================
@@ -347,6 +379,19 @@ def create_relation_type(db: Session, name: str, description: str):
         VALUES (:name, :description)
     """
     return execute_insert(db, query, {"name": name, "description": description})
+
+def get_all_relation_types(db: Session):
+    """Database operation to retrieve all relation types
+
+    Input:
+
+    Ouput:
+    """
+    query = """
+        SELECT * 
+        FROM relation_types
+    """
+    return execute_insert(db, query)
 
 def get_relation_type_by_id(db: Session, type_id: int):
     """Database operation to retrieve the relation type by its id

@@ -33,9 +33,9 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
         raw_text=raw_text
     )
 
-    # Chunk and embed raw text
-    chunks = chunk_text(raw_text)
-    concepts = extract_concepts(chunks)
+    # Chunk text, then extract and embed concepts
+    chunks = chunk_text(raw_text)  # TODO: Decide order; should extract_concepts read the full doc to get concepts
+    concepts, texts = extract_concepts(chunks)  # TODO: Update extract conceps
     embeddings = generate_embeddings(
         [concept.concept for concept in concepts]
     )
@@ -45,6 +45,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
         db=db,
         document_id=document.id,
         concepts=concepts,
+        texts=texts
         embeddings=embeddings
     )
 
@@ -52,5 +53,5 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     return {
         "id": document.id,
         "chunks": len(chunks),
-        "concepts": concepts
+        "concepts": len(concepts)
     }
