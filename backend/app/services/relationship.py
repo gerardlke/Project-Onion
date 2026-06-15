@@ -22,7 +22,7 @@ def generate_relationships(db, concept, user_id):
     relation_types = get_all_relation_types()
 
     # For each concept get their similar concepts
-    similar_concepts = find_similar_concepts(
+    similar_concepts = get_similar_concepts(
         db=db,
         user_id=user_id,
         concept_id=concept["id"]
@@ -33,7 +33,9 @@ def generate_relationships(db, concept, user_id):
 
     # For each similar concept, identify and create the type of relationship
     for neighbour in similar_concepts:
-        relation_type = classify_relation()
+        # TODO: Classify relationship type here
+        # relation_type = classify_relation()
+        relation_type = {}
 
         create_relation(
             db=db,

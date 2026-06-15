@@ -1,3 +1,4 @@
+import os
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
@@ -66,7 +67,7 @@ async def create_user_request(
     )
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=TokenResponse)
 async def login_route(
     request: LoginRequest,
     db: Session = Depends(get_db)

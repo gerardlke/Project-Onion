@@ -5,7 +5,7 @@ from app.schemas.upload import PipelineDocument
 from app.db.models import (
     Users,
     Topics,
-    Documents
+    Documents,
     Concepts,
     Relations,
     RelationTypes
@@ -89,7 +89,7 @@ def get_user_by_username(db: Session, username: str):
 
     Ouput:
     """
-    query """
+    query = """
         SELECT * 
         FROM users 
         WHERE username = :username
@@ -195,7 +195,7 @@ def create_document(db: Session, topic_id: int, filename: str, content_type: str
 
 ### Concepts queries ==================================
 
-def create_batch_concept(db: Session, document_id: int, concepts: list, texts: list, embeddings: list):
+def create_batch_concept(db: Session, batch_concepts: list):
     """Database operation to insert a batch of entries in Concepts table
 
     Input:
@@ -206,11 +206,7 @@ def create_batch_concept(db: Session, document_id: int, concepts: list, texts: l
         INSERT INTO concepts (document_id, concept, raw_text, embedding) 
         VALUES (:document_id, :concept, :raw_text, :embedding)
     """
-    params_list = [
-        {"document_id": document_id, "concept": c, "raw_text": t, "embedding": e}
-        for c, t, e in zip(concepts, texts, embeddings)
-    ]
-    return execute_batch_insert(db, query, params_list)
+    return execute_batch_insert(db, query, batch_concepts)
 
 def get_all_concepts(db: Session):
     """Database operation to get all unique concepts from Concept table
@@ -309,7 +305,7 @@ def create_relation(db: Session, source_id: int, target_id: int, relation_type: 
     }
     return execute_insert(db, query, params)
 
-def get_all_relations_by_user_id(db: Session, type_id: int):
+def get_all_relations_by_user_id(db: Session, user_id: int):
     """Database operation to retrieve the all relations for all nodes given a user
 
     Input:
