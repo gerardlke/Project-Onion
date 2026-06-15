@@ -32,7 +32,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     document = create_document(
         db=db,
         user_id=user.id,
-        topic_id=topic.id
+        topic_id=topic.id,
         filename=file.filename,
         raw_text=raw_text
     )

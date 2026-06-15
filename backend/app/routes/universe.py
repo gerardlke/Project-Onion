@@ -17,13 +17,16 @@ from app.db.operations import (
     get_all_relations_by_user_id,
     get_relation_by_id
 )
+from app.schemas.user import UserResponse as User
 from app.schemas.universe import (
     TopicNode,
     TopicResponse,
     ConceptNode,
     NodeResponse,
     NodeDetailResponse,
-    RelationResponse
+    RelationEdge,
+    RelationResponse,
+    RelationDetailResponse
 )
 
 
@@ -50,8 +53,8 @@ async def get_universe_topics(
         all_topics = [
             TopicNode(
                 id=topic["id"],
-                name=topic["name"]
-                description=topic["description"]
+                name=topic["name"],
+                description=topic["description"],
             ) for topic in get_all_topics_by_user_id(db, user.id)
         ]
 
@@ -92,7 +95,7 @@ async def get_universe_nodes(
                 id=concept["id"],
                 document_id=concept["document_id"],
                 topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
-                coordinates=project_embedding(dimensions, concept["embedding"])["coordinates"]
+                coordinates=project_embedding(concept["embedding"], dimensions)["coordinates"]
             ) for concept in get_all_concepts_by_user_id(db, user.id)
         ]
 
@@ -165,8 +168,8 @@ async def get_universe_topics(
         all_relations = [
             RelationEdge(
                 id=relation["relation_id"],
-                source_id=relation["source_id"]
-                target_id=relation["target_id"]
+                source_id=relation["source_id"],
+                target_id=relation["target_id"],
                 name=relation["name"]
             ) for relation in relations
         ]

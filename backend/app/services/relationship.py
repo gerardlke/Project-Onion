@@ -25,8 +25,8 @@ def generate_relationships(db, concept, user_id):
     similar_concepts = get_similar_concepts(
         db=db,
         user_id=user_id,
-        concept_id=concept["id"]
-        embedding=concept.embedding,
+        concept_id=concept["id"],
+        embedding=concept["embedding"],
         threshold=SIMILARITY_THRESHOLD,
         limit=RELATIONSHIP_LIMIT
     )

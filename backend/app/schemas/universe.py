@@ -17,7 +17,7 @@ class ConceptNode(BaseModel):
     coordinates: list[float]
 
 class NodeResponse(BaseModel):
-    nodes: list[UniverseNode]
+    nodes: list[ConceptNode]
 
 class NodeDetailResponse(BaseModel):
     id: int

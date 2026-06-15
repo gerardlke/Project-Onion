@@ -9,7 +9,7 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-class NewUserResponse(BaseModel):
+class UserResponse(BaseModel):
     id: int
     username: str
 

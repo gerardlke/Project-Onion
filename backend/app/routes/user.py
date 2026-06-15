@@ -20,7 +20,7 @@ from app.db.operations import (
 from app.schemas.user import (
     CreateUserRequest,
     LoginRequest,
-    NewUserResponse,
+    UserResponse,
     TokenResponse
 )
 from app.logging import setup_logger
@@ -30,7 +30,7 @@ from app.logging import setup_logger
 logger = setup_logger(__name__)
 router = APIRouter()
 
-@router.post("/create", response_model=NewUserResponse)
+@router.post("/create", response_model=UserResponse)
 async def create_user_request(
     request: CreateUserRequest,
     db: Session = Depends(get_db)
@@ -56,12 +56,12 @@ async def create_user_request(
 
     user = create_user(
         db,
-        request.username
+        request.username,
         hashed_password
     )   
     logger.info(f"Created new user with username {request.username}")
 
-    return NewUserResponse(
+    return UserResponse(
         id=user["id"],
         username=user["username"]
     )

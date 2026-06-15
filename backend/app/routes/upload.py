@@ -9,6 +9,7 @@ from fastapi import (
 )
 
 from app.logging import setup_logger
+from app.schemas.user import UserResponse as User
 from app.schemas.upload import (
     UploadResponse,
     NewTopicResponse,
@@ -118,7 +119,7 @@ async def get_all_topics(
 @router.post("/new_document", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
-    topic_name: str,
+    topic_name: str = "",
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):

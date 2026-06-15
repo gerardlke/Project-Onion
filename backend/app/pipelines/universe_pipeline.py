@@ -1,7 +1,7 @@
 from sklearn.decomposition import PCA
 
 
-async def project_embedding(dimensions: int = 3, embedding):
+async def project_embedding(embedding, dimensions: int = 3):
     """Generates coordinates for all concept embeddings belonging to a user
 
     Input: 
@@ -30,7 +30,7 @@ async def project_embedding(dimensions: int = 3, embedding):
     )
 
     projected = pca.fit_transform(
-        embeddings
+        embedding
     )
 
     return {"coordinates": projected.tolist()}
