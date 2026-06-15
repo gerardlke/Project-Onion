@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Stars from './Components/Stars';
 import NetworkScene from './Components/NetworkScene';
 import Login from './Login/Login';
+import Register from './Login/Register';
 
 /**
  * Root application component.
  *
  * Responsibilities:
  * - Hold top-level UI state for login, upload modal visibility, and the latest uploaded file.
- * - Render the login screen until a user name is submitted.
+ * - Render login/register routes before a user is signed in.
  * - Keep the network canvas mounted after login so the universe is visible before and after upload.
  */
 function App() {
@@ -53,73 +54,92 @@ function App() {
     }
   }
 
-  /**
-   * Opens the upload dialog from the main page call-to-action.
-   */
   function handleButtonClick() {
     setShowPopup(true);
   }
 
-  /**
-   * Closes the upload dialog without changing the current uploaded file.
-   */
   function closePopup() {
     setShowPopup(false);
   }
 
-  if (!loggedInUser) {
+  /**
+   * Renders the unauthenticated login route.
+   *
+   * @returns {JSX.Element}
+   */
+  function renderLoginPage() {
     return (
       <div className="app login-page">
         <h1>Welcome to Project Onion!</h1>
-        {/* Login owns the form fields; App only receives the submitted user name. */}
         <Login onLogin={setLoggedInUser} />
       </div>
     );
   }
 
+  /**
+   * Renders the main universe page after login.
+   *
+   * @returns {JSX.Element}
+   */
+  function renderUniversePage() {
+    if (!loggedInUser) {
+      return renderLoginPage();
+    }
+
+    return (
+      <div className="app">
+        <section className="page-content">
+          <h1>Welcome to Project Onion!</h1>
+          <p className="welcome-user">Signed in as {loggedInUser}</p>
+          <p>
+            We aim to help students draw better connections between difficult concepts.
+            To start off, upload your notes or any relevant materials.
+          </p>
+
+          <button type="button" className="upload-button" onClick={handleButtonClick}>
+            Upload Your Notes
+          </button>
+        </section>
+
+        {/* Keep the canvas mounted so the universe starts blank instead of appearing late. */}
+        <section className="network-panel" aria-label="Concept network preview">
+          <NetworkScene uploadedFile={uploadedFile} />
+        </section>
+
+        {showPopup && (
+          <div className="popup-overlay" role="presentation">
+            <section className="popup" role="dialog" aria-modal="true" aria-labelledby="upload-title">
+              <button type="button" className="popup-close" onClick={closePopup} aria-label="Close">
+                &times;
+              </button>
+              <h2 id="upload-title">Upload Your Notes</h2>
+              <p>Select a document to add to your universe.</p>
+              <label htmlFor="file-upload" className="upload-button popup-upload-button">
+                Choose File
+              </label>
+              <input
+                type="file"
+                id="file-upload"
+                onChange={fileUploadEvent}
+                className="file-input"
+              />
+            </section>
+          </div>
+        )}
+        {fileUploaded && <p>File uploaded successfully!</p>}
+        {fileUploaded && <Stars />}
+      </div>
+    );
+  }
+
   return (
-    <div className="app">
-      <section className="page-content">
-        <h1>Welcome to Project Onion!</h1>
-        <p className="welcome-user">Signed in as {loggedInUser}</p>
-        <p>
-          We aim to help students draw better connections between difficult concepts.
-          To start off, upload your notes or any relevant materials.
-        </p>
-
-        <button type="button" className="upload-button" onClick={handleButtonClick}>
-          Upload Your Notes
-        </button>
-      </section>
-
-      {/* Keep the canvas mounted so the universe starts blank instead of appearing late. */}
-      <section className="network-panel" aria-label="Concept network preview">
-        <NetworkScene uploadedFile={uploadedFile} />
-      </section>
-
-      {showPopup && (
-        <div className="popup-overlay" role="presentation">
-          <section className="popup" role="dialog" aria-modal="true" aria-labelledby="upload-title">
-            <button type="button" className="popup-close" onClick={closePopup} aria-label="Close">
-              &times;
-            </button>
-            <h2 id="upload-title">Upload Your Notes</h2>
-            <p>Select a document to add to your universe.</p>
-            <label htmlFor="file-upload" className="upload-button popup-upload-button">
-              Choose File
-            </label>
-            <input
-              type="file"
-              id="file-upload"
-              onChange={fileUploadEvent}
-              className="file-input"
-            />
-          </section>
-        </div>
-      )}
-      {fileUploaded && <p>File uploaded successfully!</p>}
-      {fileUploaded && <Stars />}
-    </div>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <Routes>
+        <Route path="/" element={renderUniversePage()} />
+        <Route path="/login" element={renderLoginPage()} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
