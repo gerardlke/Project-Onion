@@ -1,73 +1,179 @@
-# Milestone 1 Submission
+# Project Onion
 
-## Team Name:
-Project Onion (6911)
+An artificial intelligence-augmented semantic learning platform designed to transform educational study materials into an interactive knowledge universe.
 
-## Proposed Level of Achievement:
-Apollo 11
+Project Onion processes uploaded notes, extracts key concepts, generates semantic embeddings, and visualizes them within an explorable semantic space. The platform enables students to discover conceptual relationships between topics, navigate their knowledge base via an interactive interface, and identify potential knowledge gaps.
 
-## Motivation
-Traditional lesson styles and note-taking usually follow a very linear structure. We find that most students take one module, study very hard for it for 13 weeks, then box up the content and throw it aside without appropriately applying it in future ones.
+## Architecture Overview
 
-But knowledge is not linear; concepts intersect and intertwine. Topics that we learnt previously may become applicable in something new. For example, trees and graphs that were introduced in CS1231s were heavily applied again in CS2040s. 
+The system utilizes a modular, full-stack architecture comprised of:
 
-This gap leads to fragmented knowledge, as students miss out on critical links between the concepts they learn. As the volume of content in modules gradually increases, the overhead of organising information follows, slowly becoming a barrier to learning.
+1. **Frontend:** Developed using React and Vite.
+2. **Backend API:** Built with FastAPI.
+3. **Semantic Processing Pipeline:** Manages content extraction and embedding logic.
+4. **Database:** Powered by PostgreSQL for data persistence.
 
-We want to bridge this gap. Learning should not just be a linear hierarchical process; it should include an understanding of the underlying relations between different concepts we learn.
+## Semantic Processing Pipeline
 
-## Vision
-Project Onion will be a tool to help students visualise and understand these underlying relations. It will help to peel the complexities between what they have and will learn, bringing light to why we learn what we do.
+The semantic pipeline processes source documents through the following phases:
 
-Project Onion will be an AI-augmented knowledge cartography system that transforms static studying into a 3D semantic universe. It will deconstruct course materials into atomic concepts and provide a visual learning map, highlighting conceptual similarities and knowledge gaps.
+1. **Document Upload:** Students upload source materials in various formats.
+2. **Text Extraction:** Parsing, extraction and chunking of raw textual content.
+3. **Concept Extraction:** Identifying core academic concepts within the text segments.
+4. **Embedding Generation:** Creating semantic vector representations.
+5. **Dimension Reduction:** Formatting high-dimensional vectors for spatial visualization.
+6. **Database Persistence:** Committing the processed data to the PostgreSQL database.
 
-## User Story
+## Technology Stack
 
-- As a user, I want to upload my notes in different formats (PDF, DOCX, etc).
-- As a user, I want to observe the different concepts I have learnt in my own "universe".
-- As a user, I want to observe the connections and similaries in the content I have learnt.
-- As a user, I want to explore these different connections and the specific details behind them.
-- As a user, I want to query about specific details in my universe to understand it at a deeper level.
-- As a user, I want to...
-- As a user, I want to...
-- As a user, I want to...
+### Frontend
+- **Framework:** React
+- **Styling:** HTML / CSS
+- **3D Function:** React 3 Fiber
 
-## Features
+### Backend
+- **Framework:** FastAPI
+- **ORM:** SQLAlchemy
+- **Data Validation:** Pydantic
+- **ASGI Server:** Uvicorn
 
-### Core
+### Database
+- **Engine:** PostgreSQL
 
-Core features are the features key to making Project Onion minimally functional and useful to students.
+### AI / Natural Language Processing (NLP)
+- **Embeddings:** SentenceTransformers
+- **Dimensionality Reduction:** PCA
 
-1. **Semantic Ingestion Pipeline**
+### Infrastructure
+- **Containerization:** Docker
+- **Orchestration:** Docker Compose
 
-    Automatic chunking and embedding of notes submitted by users into our stored vector space.
+## Project Structure
 
-2. **3D Latent Space Visualiser**
+```text
+project-root/
+  backend/
+    app/
+      configs/
+      db/
+      pipelines/
+      routes/
+      schemas/
+      services/
+      logging.py
+      main.py
+    backend_requirements.txt
+    Dockerfile
+  infrastructure/
+    db/
+  misc/
+  universe-web/
+    public/
+    src/
+    Dockerfile
+    package-lock.josn
+    package.json
+  docker-compose.yml
+  .env
+  .gitignore
+  README.md
+```
 
-    A web-based "universe" to help users visualise clusters of knowledge and similarities in what they learn.
+## Running the Application
 
-3. **Automated Relationship Mapping**
+### Prerequisites
 
-    Detection and mapping of specific connections between different clusters/concepts, highlighting keywords and aliases. 
+Ensure the following software is installed on the system:
 
-4. **RAG-based query tool**
+* Docker
+* Docker Compose
 
-    AI chatbot to resolve specific user queries. 
+Verify the installation using:
 
-### Additional
+```bash
+docker --version
+docker compose version
+```
 
-Additional features serve as add-ons to enhance the user's learning and experience using Project Onion. 
+### Environment Configuration
 
-1. **Knowledge Gap Analysis**
+Create a `.env` file in the project root directory and configure the required environment variables.
 
-    Identifies concepts with higher conceptual importance and relation to imported content, yet lacking information thus far, giving users a learning direction.
+Example:
 
-2. **Search-to-Fly Exploration**
+```env
+POSTGRES_USER=<user>
+POSTGRES_PASSWORD=<password>
+POSTGRES_DB=<db_name>
 
-    A search bar with camera fly-through to explore the universe built by the student thus far. Purely decorative.
+DATABASE_URL=postgresql://<user>:<password>@postgres:5432/<db_name>
+```
 
-## Progress
+Adjust the values according to the local development environment.
 
-In milestone 1, ...
+### Building and Starting Services
 
-### Proposed Timeline
+From the project root directory, execute:
 
+```bash
+docker compose up --build
+```
+
+This command builds the required images and starts the frontend, backend, and database services.
+
+To run the services in detached mode:
+
+```bash
+docker compose up -d --build
+```
+
+### Accessing the Application
+
+After all containers have started successfully:
+
+Frontend
+
+```text
+http://localhost:3001
+```
+
+Backend API
+
+```text
+http://localhost:8000
+```
+
+Backend API Documentation
+
+```text
+http://localhost:8000/docs
+```
+
+### Stopping Services
+
+To stop all running containers:
+
+```bash
+docker compose down
+```
+
+### Resetting the Database
+
+If database credentials or schema configurations have changed, remove the existing database volume before rebuilding:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+This will recreate the PostgreSQL instance using the latest configuration.
+
+### Development Notes
+
+The application is configured using Docker Compose with separate containers for:
+
+* Frontend
+* Backend
+* PostgreSQL Database
+
+Within the Docker network, backend services connect to PostgreSQL using the hostname `postgres`. When running components outside Docker, local connections should use `localhost` instead.
