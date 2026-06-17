@@ -1,7 +1,9 @@
 import os
+import jwt
 from dotenv import load_dotenv
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.db.operations import get_user_by_id

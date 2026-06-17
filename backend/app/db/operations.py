@@ -1,16 +1,6 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.upload import PipelineDocument
-from app.db.models import (
-    Users,
-    Topics,
-    Documents,
-    Concepts,
-    Relations,
-    RelationTypes
-)
-
 
 ### Helper functions ==================================
 

@@ -49,7 +49,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
                 match = find_existing(c.get("name"), concepts_dict)
 
                 if match is not None:
-                    concepts_dict.get(match).get("raw_text") += c.get("description", "")
+                    concepts_dict[match]["raw_text"] += c.get("description", "")
                 else:
                     concepts_dict[c.get("name")] = {
                         "document_id": document.id,
