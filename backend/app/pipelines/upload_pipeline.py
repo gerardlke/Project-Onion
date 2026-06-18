@@ -62,7 +62,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     for name, concept in concepts_dict.items():
         concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
         batch_concepts.append(concept)
-        concepts.append(topic_name)
+        concepts.append(name)
 
     # Save concepts to db in batches
     create_batch_concept(

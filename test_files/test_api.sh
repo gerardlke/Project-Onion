@@ -1,8 +1,10 @@
 #!/bin/bash
 
+clear
+
 BASE_URL="http://localhost:8000"
 
-echo "=== 1. USER AUTHENTICATION ==="
+echo "===== 1. USER AUTHENTICATION ====="
 echo "[API] POST /user/create"
 curl -X POST $BASE_URL/user/create -H "Content-Type: application/json" -d '{"username": "gerardlke", "password": "admin"}'
 echo -e "\n"
@@ -18,7 +20,8 @@ fi
 echo "Successfully logged in and captured token."
 echo -e "\n"
 
-echo "=== 2. TOPIC MANAGEMENT ==="
+
+echo "===== 2. DOCUMENT UPLOAD ====="
 echo "[API] POST /upload/new_topic"
 curl -X POST $BASE_URL/upload/new_topic \
      -H "Authorization: Bearer $TOKEN" \
@@ -30,7 +33,6 @@ echo "[API] GET /upload/get_topics"
 curl -X GET $BASE_URL/upload/get_topics -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
-echo "=== 3. DOCUMENT UPLOAD ==="
 echo "[API] POST /upload/new_document"
 curl -X POST $BASE_URL/upload/new_document \
      -H "Authorization: Bearer $TOKEN" \
@@ -38,7 +40,7 @@ curl -X POST $BASE_URL/upload/new_document \
      -F "topic_name=CS1101s"
 echo -e "\n"
 
-echo "=== 4. UNIVERSE API ==="
+echo "===== 3. UNIVERSE API ====="
 echo "[API] GET /universe/topics"
 curl -X GET $BASE_URL/universe/topics -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
@@ -48,10 +50,9 @@ curl -X GET "$BASE_URL/universe/nodes?dimensions=3" -H "Authorization: Bearer $T
 echo -e "\n"
 
 echo "[API] GET /universe/node/{id}"
-curl -X GET $BASE_URL/universe/node/123 -H "Authorization: Bearer $TOKEN"
+curl -X GET $BASE_URL/universe/node/1 -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
-# echo "=== 5. RELATIONS ==="
 # echo "[API] GET /universe/relations"
 # curl -X GET $BASE_URL/universe/relations -H "Authorization: Bearer $TOKEN"
 # echo -e "\n"

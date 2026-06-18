@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
     HTTPException,
-    Body,
     Depends
 )
 
@@ -48,7 +47,7 @@ async def get_universe_topics(
     Ouput:
     """
     try:
-        logger.info(f"Extracting all topics for user '{user.name}'.")
+        logger.info(f"Extracting all topics for user '{user["username"]}'.")
 
         # Extract all topics from db then format into TopicNodes
         all_topics = [
@@ -56,7 +55,7 @@ async def get_universe_topics(
                 id=topic["id"],
                 name=topic["name"],
                 description=topic["description"],
-            ) for topic in get_all_topics_by_user_id(db, user.id)
+            ) for topic in get_all_topics_by_user_id(db, user["id"])
         ]
 
         logger.info(f"Extracted {len(all_topics)} topic nodes.")
@@ -77,7 +76,7 @@ async def get_universe_topics(
 
 @router.get("/nodes", response_model=NodeResponse)
 async def get_universe_nodes(
-    dimensions: int = Body(...),
+    dimensions: int = 3,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -88,7 +87,7 @@ async def get_universe_nodes(
     Ouput:
     """
     try:
-        logger.info(f"Extracting concept nodes for user '{user.name}'.")
+        logger.info(f"Extracting concept nodes for user '{user["username"]}'.")
 
         # Extract all concepts from db then format into ConceptNodes
         all_concepts = [
@@ -96,8 +95,8 @@ async def get_universe_nodes(
                 id=concept["id"],
                 document_id=concept["document_id"],
                 topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
-                coordinates=project_embedding(concept["embedding"], dimensions)["coordinates"]
-            ) for concept in get_all_concepts_by_user_id(db, user.id)
+                coordinates=await project_embedding(concept["embedding"], dimensions)
+            ) for concept in get_all_concepts_by_user_id(db, user["id"])
         ]
 
         logger.info(f"Extracted {len(all_concepts)} concept nodes.")
@@ -118,7 +117,7 @@ async def get_universe_nodes(
 
 @router.get("/node/{concept_id}", response_model=NodeDetailResponse)
 async def get_node_detail(
-    concept_id: int = Body(...),
+    concept_id: int,
     db: Session = Depends(get_db)
 ):
     """API Route for extracting specific concept node data from backend
@@ -135,10 +134,12 @@ async def get_node_detail(
                 status_code=404,
                 detail="Concept not found"
             )
+        
+        concept = concept[0]
 
         return NodeDetailResponse(
             id=concept["id"],
-            concept=concept["concept"],
+            concept=concept["name"],
             text=concept["raw_text"]
         )
     except Exception as error:
@@ -163,8 +164,8 @@ async def get_universe_relations(
     Ouput:
     """
     try:
-        logger.info(f"Extracting all relations for user '{user.name}'.")
-        relations = get_all_relations_by_user_id(db, user.id)
+        logger.info(f"Extracting all relations for user '{user["username"]}'.")
+        relations = get_all_relations_by_user_id(db, user["id"])
 
         all_relations = [
             RelationEdge(
@@ -191,7 +192,7 @@ async def get_universe_relations(
 
 @router.get("/relation/{relation_id}", response_model=RelationDetailResponse)
 async def get_relation_detail(
-    relation_id: int = Body(...),
+    relation_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
