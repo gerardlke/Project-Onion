@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
-    Depends,
     HTTPException,
+    Body,
+    Depends
 )
 
 from app.logging import setup_logger
@@ -76,7 +77,7 @@ async def get_universe_topics(
 
 @router.get("/nodes", response_model=NodeResponse)
 async def get_universe_nodes(
-    dimensions: int = 3,
+    dimensions: int = Body(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -117,7 +118,7 @@ async def get_universe_nodes(
 
 @router.get("/node/{concept_id}", response_model=NodeDetailResponse)
 async def get_node_detail(
-    concept_id: int,
+    concept_id: int = Body(...),
     db: Session = Depends(get_db)
 ):
     """API Route for extracting specific concept node data from backend
@@ -151,7 +152,7 @@ async def get_node_detail(
 
 
 @router.get("/relations", response_model=RelationResponse)
-async def get_universe_topics(
+async def get_universe_relations(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -189,8 +190,8 @@ async def get_universe_topics(
 
 
 @router.get("/relation/{relation_id}", response_model=RelationDetailResponse)
-async def get_universe_topics(
-    relation_id: int,
+async def get_relation_detail(
+    relation_id: int = Body(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):

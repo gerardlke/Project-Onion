@@ -24,9 +24,9 @@ def execute_batch_insert(db: Session, query_str: str, params_list: list):
     """
     if not params_list:
         return []
-    result = db.execute(text(f"{query_str} RETURNING *"), params_list)
+    db.execute(text(f"{query_str}"), params_list)
     db.commit()
-    return result.mappings().all()
+    return []
 
 def execute_select(db: Session, query_str: str, params: dict={}):
     """Helper function to select rows db
@@ -193,8 +193,8 @@ def create_batch_concept(db: Session, batch_concepts: list):
     Ouput:
     """
     query = """
-        INSERT INTO concepts (document_id, concept, raw_text, embedding) 
-        VALUES (:document_id, :concept, :raw_text, :embedding)
+        INSERT INTO concepts (document_id, name, raw_text, embedding) 
+        VALUES (:document_id, :name, :raw_text, :embedding)
     """
     return execute_batch_insert(db, query, batch_concepts)
 

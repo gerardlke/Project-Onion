@@ -26,12 +26,13 @@ CONCEPT_EXTRACTION_PROMPT = """
     - description: one sentence explaining the core idea\n
     Return JSON only. No explanation outside the JSON.\n
     Format:
-    {
+    {{
         "concepts": [
-            {"name": "...", "description": "..."},
+            {{"name": "...", "description": "..."}},
             ...
         ]
-    }\n
+    }}
+
     Text:
     \"\"\"
     {chunk_text}

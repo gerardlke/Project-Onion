@@ -28,18 +28,18 @@ services:
     depends_on:
       - postgres
 
-  frontend:
-    build:
-      context: ./universe-web
-    container_name: project_onion_frontend
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./universe-web:/app
-      - /app/node_modules
-    depends_on:
-      - backend
+  # frontend:
+  #   build:
+  #     context: ./universe-web
+  #   container_name: project_onion_frontend
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./universe-web:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - backend
 
 volumes:
   postgres_data:

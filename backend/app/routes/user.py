@@ -5,7 +5,6 @@ from fastapi import (
     Depends,
     HTTPException,
 )
-from fastapi.security import OAuth2PasswordBearer
 
 from app.services.authenticate import (
     hash_password,
@@ -89,6 +88,8 @@ async def login_route(
             detail="User not found"
         )
 
+    user = user[0]
+
     if not verify_password(request.password, user["password_hash"]):
         raise HTTPException(
             status_code=401,
@@ -96,7 +97,7 @@ async def login_route(
         )
     logger.info(f"User '{request.username}' verified.")
 
-    access_token = create_access_token(user.id, os.getenv("JWT_EXPIRE_MINUTES"))
+    access_token = create_access_token(user["id"])
     logger.info(f"Authentication token for '{request.username}' created.")
 
     return TokenResponse(

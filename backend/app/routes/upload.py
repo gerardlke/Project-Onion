@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter, 
     UploadFile, 
     HTTPException, 
+    Body,
     File, 
     Depends
 )
@@ -38,8 +39,8 @@ router = APIRouter()
 
 @router.post("/new_topic", response_model=NewTopicResponse)
 async def upload_topic(
-    name: str,
-    description: str,
+    name: str = Body(...),
+    description: str = Body(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -50,7 +51,7 @@ async def upload_topic(
     Ouput:
     """
     try:
-        new_topic = create_topic(db, user.id, name, description)
+        new_topic = create_topic(db, user["id"], name, description)
         logger.info(f"Created new topic '{name}'.")
 
         # Response model
@@ -76,7 +77,7 @@ async def upload_topic(
         )
 
 
-@router.post("/get_topics", response_model=GetTopicResponse)
+@router.get("/get_topics", response_model=GetTopicResponse)
 async def get_all_topics(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
@@ -88,11 +89,11 @@ async def get_all_topics(
     Ouput:
     """
     try:
-        all_topics = await get_all_topics_by_user_id(
+        all_topics = get_all_topics_by_user_id(
             db=db,
             user_id=user.id
         )
-        logger.info(f"Retrieved {len(all_topics)} topics.")
+        logger.info(f"Retrieved {len(all_topics)} topic(s)")
 
         # Response model
         return GetTopicResponse(
@@ -119,7 +120,7 @@ async def get_all_topics(
 @router.post("/new_document", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
-    topic_name: str = "",
+    topic_name: str = Body(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -167,8 +168,8 @@ async def upload_document(
             content_type=file.content_type,
             size_mb=file.size,
             document_id=metadata.get("id", -1),
-            num_chunks=metadata.get("chunks", -1),
-            num_concepts=metadata.get("concepts", -1)
+            num_chunks=metadata.get("num_chunks", -1),
+            concepts=metadata.get("concepts", [])
         )
 
     except HTTPException as http_error:

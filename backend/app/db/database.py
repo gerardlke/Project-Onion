@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import (
     declarative_base,
     sessionmaker,
@@ -24,6 +24,10 @@ engine = create_engine(
     echo=False,  # Turned off to reduce log confusion
 )
 
+with engine.connect() as connection:
+    connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+    connection.commit()
+
 # Check if database already exists
 if not database_exists(engine.url):
     create_database(engine.url)
@@ -31,10 +35,17 @@ if not database_exists(engine.url):
 else:
     logger.info("Database already exists.")
 
+Base = declarative_base()
+
+### Import database models
+from app.db.models import (
+    Users, Topics, Documents, Concepts, Relations, RelationTypes
+)
+
+Base.metadata.create_all(bind=engine)
+
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
 )
-
-Base = declarative_base()

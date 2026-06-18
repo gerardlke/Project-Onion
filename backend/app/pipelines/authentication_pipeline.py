@@ -34,5 +34,5 @@ async def get_current_user(
         ]
     )
     user_id = payload["sub"]
-    user = get_user_by_id(int(user_id))
-    return user
+    user = get_user_by_id(db, int(user_id))
+    return user[0]

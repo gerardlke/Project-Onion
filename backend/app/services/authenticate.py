@@ -1,17 +1,13 @@
 import os
+import jwt
+import bcrypt
 from dotenv import load_dotenv
-from jose import jwt
-from datetime import datetime, timedelta
-from passlib.context import CryptContext
+from datetime import datetime, timedelta, timezone
 
 
 # Set up configs
 load_dotenv()
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
 
 def hash_password(password: str) -> str:
     """Helper function to hash password 
@@ -20,7 +16,8 @@ def hash_password(password: str) -> str:
 
     Ouput:
     """
-    return pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return hashed.decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Helper function to verify password against hashed password
@@ -29,19 +26,16 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
     Ouput:
     """
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
-    )
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
-def create_access_token(user_id: int, timeout: int = 60):
+def create_access_token(user_id: int):
     """Helper funciton to create access token for subsequent API requests
 
     Input:
 
     Ouput:
     """
-    expire = datetime.utcnow() + timedelta(minutes=timeout)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=int(os.getenv("JWT_EXPIRE_MINUTES", 60)))
 
     payload = {
         "sub": str(user_id),
@@ -50,6 +44,6 @@ def create_access_token(user_id: int, timeout: int = 60):
 
     return jwt.encode(
         payload,
-        SECRET_KEY,
-        algorithm=ALGORITHM
+        os.getenv("JWT_SECRET_KEY"),
+        algorithm=os.getenv("JWT_ALGORITHM")
     )

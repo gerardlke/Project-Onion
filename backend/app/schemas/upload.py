@@ -22,7 +22,7 @@ class UploadResponse(BaseModel):
     size_mb: float
     document_id: int
     num_chunks: int
-    concepts: str
+    concepts: list[str]
 
 class RawConcept(BaseModel):
     name: str

@@ -27,13 +27,13 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     # Extract raw text and save topic/document to db first
     raw_text = await extract_text(file)
     
-    topic = get_topic_by_name(topic_name)
+    topic = get_topic_by_name(db, topic_name)[0]
 
     document = create_document(
         db=db,
-        user_id=user.id,
-        topic_id=topic.id,
+        topic_id=topic["id"],
         filename=file.filename,
+        content_type=file.content_type,
         raw_text=raw_text
     )
 
@@ -41,7 +41,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     concepts_dict = {}
     chunks = chunk_text(raw_text)
     for chunk in chunks:
-        concepts = extract_concepts(chunk)
+        concepts = await extract_concepts(chunk)
         for c in concepts:
             if c.get("name", ""):
 
@@ -53,18 +53,19 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
                 else:
                     concepts_dict[c.get("name")] = {
                         "document_id": document.id,
-                        "concept": c.get("name"),
+                        "name": c.get("name"),
                         "raw_text": c.get("description", "")
                     }
 
     # Embed aggregated concepts
-    batch_concepts = []
+    batch_concepts, concepts = [], []
     for name, concept in concepts_dict.items():
-        concept["embedding"] = generate_embeddings(concept.get(raw_text, ""))
+        concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
         batch_concepts.append(concept)
+        concepts.append(topic_name)
 
     # Save concepts to db in batches
-    concepts = create_batch_concept(
+    create_batch_concept(
         db=db,
         batch_concepts=batch_concepts
     )
@@ -74,6 +75,6 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
     # Return metadata to upload route
     return {
         "id": document.id,
-        "chunks": len(chunks),
-        "concepts": len(concepts)
+        "num_chunks": len(chunks),
+        "concepts": concepts
     }
