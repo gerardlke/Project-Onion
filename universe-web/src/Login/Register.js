@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import './Login.css';
@@ -9,6 +9,7 @@ const USER_REGEX = /^[A-Za-z][A-Za-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
 
 const Register = () => {
+    const navigate = useNavigate();
     const userRef = useRef();
     const errRef = useRef();
     
@@ -25,6 +26,7 @@ const Register = () => {
     const [matchFocus, setMatchFocus] = useState(false);
 
     const [errMsg, setErrMsg] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         userRef.current?.focus();
@@ -55,7 +57,34 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(user, pwd);
+        if (!validName || !validPwd || !validMatch) {
+            setErrMsg('Please fix the highlighted fields before signing up.');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch('/user/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: user, password: pwd }),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                setErrMsg(errorBody?.detail || 'Registration failed. Please try again.');
+                return;
+            }
+
+            navigate('/login');
+        } catch (error) {
+            setErrMsg('Registration service is unavailable. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return(
@@ -144,7 +173,9 @@ const Register = () => {
                     Must match the first password input field.
                 </p>
 
-                <button disabled={!validName || !validPwd || !validMatch ? true : false}>Sign Up</button>
+                <button disabled={!validName || !validPwd || !validMatch || isSubmitting}>
+                    {isSubmitting ? 'Signing Up...' : 'Sign Up'}
+                </button>
                 <p className="register-link">
                     Already have an account? <Link to="/login">Log in here</Link>.
                 </p>

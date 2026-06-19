@@ -1,7 +1,57 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
-function login() {
+function mockApi() {
+  global.fetch = jest.fn((url) => {
+    if (url === '/user/login') {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ id: 1, username: 'student' }),
+      });
+    }
+
+    if (url === '/upload/get_topics') {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          topics: [{ name: 'Math', description: 'Math notes' }],
+        }),
+      });
+    }
+
+    if (url === '/upload/new_document') {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          topic: 'Math',
+          filename: 'notes.txt',
+          content_type: 'text/plain',
+          size_mb: 0.01,
+          document_id: 1,
+          num_chunks: 1,
+          concepts: 'notes',
+        }),
+      });
+    }
+
+    if (url === '/upload/new_topic') {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          success: true,
+          name: 'Science',
+          description: 'Science notes',
+        }),
+      });
+    }
+
+    return Promise.resolve({ ok: true, json: async () => ({}) });
+  });
+}
+
+async function login() {
   fireEvent.change(screen.getByLabelText(/username/i), {
     target: { value: 'student' },
   });
@@ -9,49 +59,62 @@ function login() {
     target: { value: 'password' },
   });
   fireEvent.click(screen.getByRole('button', { name: /^login$/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/signed in as student/i)).toBeInTheDocument();
+  });
 }
 
-test('opens the upload screen after login', () => {
+beforeEach(() => {
+  mockApi();
+});
+
+test('opens the topic universe after login', async () => {
   render(<App />);
 
   expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
 
-  login();
+  await login();
 
   expect(screen.getByText(/signed in as student/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /upload your notes/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /create topic/i })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /upload your notes/i })).not.toBeInTheDocument();
 });
 
-test('shows a star image after a successful file upload', async () => {
-  global.fetch = jest.fn().mockResolvedValue({ ok: true });
+test('creates a new topic', async () => {
   render(<App />);
 
-  login();
-  fireEvent.click(screen.getByRole('button', { name: /upload your notes/i }));
+  await login();
 
-  expect(screen.getByRole('dialog', { name: /upload your notes/i })).toBeInTheDocument();
-
-  fireEvent.change(screen.getByLabelText(/choose file/i), {
-    target: { files: [new File(['notes'], 'notes.txt', { type: 'text/plain' })] },
+  fireEvent.change(screen.getByPlaceholderText(/topic name/i), {
+    target: { value: 'Science' },
   });
+  fireEvent.change(screen.getByPlaceholderText(/topic description/i), {
+    target: { value: 'Science notes' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /create topic/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/file uploaded successfully/i)).toBeInTheDocument();
-    expect(screen.getByAltText('Star')).toBeInTheDocument();
+    expect(screen.getByText(/created topic: science/i)).toBeInTheDocument();
   });
 
   expect(fetch).toHaveBeenCalledWith(
-    '/upload/',
-    expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
+    '/upload/new_topic',
+    expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Science',
+        description: 'Science notes',
+      }),
+    })
   );
 });
 
-test('closes the upload popup', () => {
+test('does not render a central upload dialog', async () => {
   render(<App />);
 
-  login();
-  fireEvent.click(screen.getByRole('button', { name: /upload your notes/i }));
-  fireEvent.click(screen.getByRole('button', { name: /close/i }));
+  await login();
 
+  expect(screen.queryByRole('button', { name: /upload your notes/i })).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
