@@ -41,3 +41,64 @@
   font: inherit;
   font-weight: bold;
 }
+
+.login-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.register-link {
+  color: white;
+  font-size: 16px;
+  margin: 18px 0 0;
+}
+
+.register-link a {
+  color: white;
+  font-weight: bold;
+}
+
+.valid {
+  color: #22c55e;
+  margin-left: 8px;
+}
+
+.invalid {
+  color: #f87171;
+  margin-left: 8px;
+}
+
+.hide {
+  display: none;
+}
+
+.offscreen {
+  left: -9999px;
+  position: absolute;
+}
+
+.instructions,
+.errmsg {
+  align-self: stretch;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  margin: -8px 0 16px;
+  padding: 10px;
+  text-align: left;
+}
+
+.instructions {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.instructions svg {
+  margin-right: 6px;
+}
+
+.errmsg {
+  background-color: rgba(248, 113, 113, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  color: #fecaca;
+}

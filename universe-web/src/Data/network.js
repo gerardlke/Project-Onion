@@ -1,18 +1,26 @@
+const TOPIC_COLORS = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+
 /**
- * Builds the first universe node from an uploaded file name.
+ * Builds a universe node from a topic returned by the upload API.
  *
- * Keeping this as a factory function makes it easier to replace the placeholder
- * metadata with backend-derived concepts later without changing NetworkScene.
- *
- * @param {string} fileName - Name of the file selected by the user.
- * @returns {{id: string, position: [number, number, number], color: string, label: string, info: string}}
+ * @param {{name: string, description: string}} topic - Topic API object.
+ * @param {number} index - Position index in the topic list.
+ * @returns {{id: string, position: [number, number, number], color: string, label: string, info: string, topicName: string}}
  */
-export function createUploadedFileNode(fileName) {
+export function createTopicNode(topic, index) {
+  const angle = index * 1.9;
+  const radius = 2.4;
+
   return {
-    id: 'uploaded-file',
-    position: [0, 0, 0],
-    color: '#4f46e5',
-    label: fileName || 'Uploaded File',
-    info: 'Your uploaded notes are ready to explore.',
+    id: topic.name,
+    position: [
+      Math.cos(angle) * radius,
+      Math.sin(index * 1.3) * 1.2,
+      Math.sin(angle) * radius,
+    ],
+    color: TOPIC_COLORS[index % TOPIC_COLORS.length],
+    label: topic.name,
+    info: topic.description || 'No description yet.',
+    topicName: topic.name,
   };
 }
