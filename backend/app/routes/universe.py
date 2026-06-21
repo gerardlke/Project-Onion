@@ -1,3 +1,4 @@
+import json
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
@@ -7,7 +8,7 @@ from fastapi import (
 
 from app.logging import setup_logger
 from app.pipelines.authentication_pipeline import get_current_user
-from app.pipelines.universe_pipeline import project_embedding
+from app.pipelines.universe_pipeline import project_embeddings
 from app.db.session import get_db
 from app.db.operations import (
     get_all_topics_by_user_id,
@@ -47,7 +48,7 @@ async def get_universe_topics(
     Ouput:
     """
     try:
-        logger.info(f"Extracting all topics for user '{user["username"]}'.")
+        logger.info(f"Extracting all topics for user '{user["username"]}'")
 
         # Extract all topics from db then format into TopicNodes
         all_topics = [
@@ -58,7 +59,7 @@ async def get_universe_topics(
             ) for topic in get_all_topics_by_user_id(db, user["id"])
         ]
 
-        logger.info(f"Extracted {len(all_topics)} topic nodes.")
+        logger.info(f"Extracted {len(all_topics)} topic nodes")
 
         return TopicResponse(
             nodes=all_topics
@@ -87,19 +88,21 @@ async def get_universe_nodes(
     Ouput:
     """
     try:
-        logger.info(f"Extracting concept nodes for user '{user["username"]}'.")
+        logger.info(f"Extracting concept nodes for user '{user["username"]}'")
 
-        # Extract all concepts from db then format into ConceptNodes
+        # Extract all concepts from db, project all coordinates, then format into ConceptNodes
+        concepts = get_all_concepts_by_user_id(db, user["id"])
+        all_coordinates = await project_embeddings([json.loads(concept["embedding"]) for concept in concepts])
         all_concepts = [
             ConceptNode(
                 id=concept["id"],
                 document_id=concept["document_id"],
                 topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
-                coordinates=await project_embedding(concept["embedding"], dimensions)
-            ) for concept in get_all_concepts_by_user_id(db, user["id"])
+                coordinates=all_coordinates[id]
+            ) for id, concept in enumerate(concepts)
         ]
 
-        logger.info(f"Extracted {len(all_concepts)} concept nodes.")
+        logger.info(f"Extracted {len(all_concepts)} concept nodes")
 
         return NodeResponse(
             nodes=all_concepts
@@ -164,7 +167,7 @@ async def get_universe_relations(
     Ouput:
     """
     try:
-        logger.info(f"Extracting all relations for user '{user["username"]}'.")
+        logger.info(f"Extracting all relations for user '{user["username"]}'")
         relations = get_all_relations_by_user_id(db, user["id"])
 
         all_relations = [
@@ -203,7 +206,7 @@ async def get_relation_detail(
     Ouput:
     """
     try:
-        logger.info(f"Extracting relation information for relation id '{relation_id}'.")
+        logger.info(f"Extracting relation information for relation id '{relation_id}'")
         relation = get_relation_by_id(db, relation_id)
 
         return RelationDetailResponse(

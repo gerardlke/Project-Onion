@@ -33,10 +33,17 @@ echo "[API] GET /upload/get_topics"
 curl -X GET $BASE_URL/upload/get_topics -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
-echo "[API] POST /upload/new_document"
+echo "[API] POST /upload/new_document - small notes"
 curl -X POST $BASE_URL/upload/new_document \
      -H "Authorization: Bearer $TOKEN" \
-     -F "file=@test_files/notes.txt" \
+     -F "file=@test_files/notes_small.txt" \
+     -F "topic_name=CS1101s"
+echo -e "\n"
+
+echo "[API] POST /upload/new_document - big notes"
+curl -X POST $BASE_URL/upload/new_document \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@test_files/note_big.txt" \
      -F "topic_name=CS1101s"
 echo -e "\n"
 

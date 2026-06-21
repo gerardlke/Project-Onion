@@ -95,10 +95,10 @@ async def login_route(
             status_code=401,
             detail="Incorrect password entered"
         )
-    logger.info(f"User '{request.username}' verified.")
+    logger.info(f"User '{request.username}' verified")
 
     access_token = create_access_token(user["id"])
-    logger.info(f"Authentication token for '{request.username}' created.")
+    logger.info(f"Authentication token for '{request.username}' created")
 
     return TokenResponse(
         access_token=access_token,

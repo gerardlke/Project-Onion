@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from sqlalchemy.orm import Session
 from fastapi import (
@@ -52,7 +53,7 @@ async def upload_topic(
     """
     try:
         new_topic = create_topic(db, user["id"], name, description)
-        logger.info(f"Created new topic '{name}'.")
+        logger.info(f"Created new topic '{name}'")
 
         # Response model
         return NewTopicResponse(
@@ -131,8 +132,9 @@ async def upload_document(
     Ouput:
     """
     try:
-        logger.info(f"Upload request received for {file.filename}.")
-        logger.info("Starting file validation.")
+        logger.info(f"Upload request received for {file.filename}")
+        logger.info("Starting file validation")
+        start = time.time()
 
         # Validate extension
         file_extension = Path(file.filename).suffix.lower()
@@ -150,7 +152,7 @@ async def upload_document(
             )
 
         # Run pipeline
-        logger.info("Starting file processing.")
+        logger.info("Starting file processing")
         metadata = await process_document(
             db=db,
             user=user,
@@ -158,7 +160,7 @@ async def upload_document(
             topic_name=topic_name
         )
 
-        logger.info("Finished file upload.")
+        logger.info(f"Finished file upload in {round(time.time() - start)}s")
 
         # Response model
         return UploadResponse(

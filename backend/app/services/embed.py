@@ -10,9 +10,9 @@ from app.configs.config import ENCODER
 logger = setup_logger(__name__)
 
 ### Set up configs for encoder
-logger.info("Setting up encoder.")
+logger.info("Setting up encoder")
 model = SentenceTransformer(ENCODER)
-logger.info("Encoder downloaded.")
+logger.info("Encoder downloaded")
 
 
 def generate_embeddings(concepts: list[str]):

@@ -16,9 +16,7 @@ _load_lock = asyncio.Lock()
 async def _get_model_and_tokenizer():
     """
     Lazily load model + tokenizer on first call, then reuse.
-
-    Wrapped in an asyncio.Lock so concurrent requests arriving before the
-    model finishes loading don't each trigger their own separate load.
+    Wrapped in an asyncio.Lock so concurrent requests arriving before model finishes loading don't each trigger their own separate load.
     """
     global _model, _tokenizer
 
@@ -46,22 +44,14 @@ async def _get_model_and_tokenizer():
 
 
 async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float = 0.0):
-    """
-    Generate a completion for a single user prompt.
+    """Generate a completion for a single user prompt.
 
-    Mirrors the shape of an OpenAI chat completion call (prompt in,
-    string out) so callers don't need to know this isn't a hosted API.
+    Input:
+    - prompt:           The full prompt text (already formatted, e.g. via CONCEPT_EXTRACTION_PROMPT.format(...))
+    - max_new_tokens:   Generation budget — mirrors max_tokens in the OpenAI API
+    - temperature:      0.0 = deterministic (greedy decoding)
 
-    Args:
-        prompt:         The full prompt text (already formatted, e.g. via
-                         CONCEPT_EXTRACTION_PROMPT.format(...))
-        max_new_tokens: Generation budget — mirrors max_tokens in the OpenAI API
-        temperature:    0.0 = deterministic (greedy decoding).
-                        transformers' generate() doesn't accept temperature=0.0
-                        directly, so we map it to do_sample=False below.
-
-    Returns:
-        Decoded string completion (model's reply only, prompt stripped out)
+    Output: Decoded string completion (model's reply only, prompt stripped out)
     """
     model, tokenizer = await _get_model_and_tokenizer()
 

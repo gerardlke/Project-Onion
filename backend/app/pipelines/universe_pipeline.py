@@ -1,9 +1,12 @@
-import json
 import numpy as np
 from sklearn.decomposition import PCA
 
+### Set up logger
+from app.logging import setup_logger
+logger = setup_logger(__name__)
 
-async def project_embedding(embedding, dimensions: int = 3):
+
+async def project_embeddings(embeddings: list[list[float]], dimensions: int = 3):
     """Generates coordinates for all concept embeddings belonging to a user
 
     Input: 
@@ -12,26 +15,26 @@ async def project_embedding(embedding, dimensions: int = 3):
         "coordinates": [x, y, ...]
     }
     """
+    if not embeddings:
+        return []
+    
     if dimensions < 2:
         raise ValueError(
             "Universe must have at least 2 dimensions"
         )
     
-    # Convert string to list if needed, then to 2D numpy array 
-    if isinstance(embedding, str):
-        embedding = json.loads(embedding)
-    if not embedding:
-        return []
-    embedding = np.array(embedding).reshape(1, -1)
+    matrix = np.array(embeddings)
+    
+    n_samples, n_features = matrix.shape
 
-    # Ensure n_components is valid based on the entire dataset
-    n_samples, n_features = embedding.shape
-    n_components = min(dimensions, n_samples, n_features)
+    if n_samples < dimensions:
+        logger.warning(
+            f"{n_samples} concept(s) available - cannot project to {dimensions}D."
+            f"Falling back to {n_samples}D. More uploads will produce a richer universe."
+        )
+        dimensions = n_samples
 
-    pca = PCA(n_components=n_components)
+    pca = PCA(n_components=dimensions)
+    projected = pca.fit_transform(matrix)
 
-    print("SHAPE:", embedding.shape)
-
-    projected = pca.fit_transform(embedding)
-    print("COORDS:", projected.tolist())
-    return projected.tolist()[0]
+    return projected.tolist()
