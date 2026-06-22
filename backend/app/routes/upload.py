@@ -5,6 +5,7 @@ from fastapi import (
     APIRouter, 
     UploadFile, 
     HTTPException, 
+    BackgroundTasks,
     Body,
     File, 
     Depends
@@ -120,6 +121,7 @@ async def get_all_topics(
 
 @router.post("/new_document", response_model=UploadResponse)
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     topic_name: str = Body(...),
     db: Session = Depends(get_db),
@@ -157,7 +159,8 @@ async def upload_document(
             db=db,
             user=user,
             file=file,
-            topic_name=topic_name
+            topic_name=topic_name,
+            background_tasks=background_tasks
         )
 
         logger.info(f"Finished file upload in {round(time.time() - start)}s")

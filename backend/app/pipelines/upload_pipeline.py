@@ -1,5 +1,6 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, BackgroundTasks
 
+from app.pipelines.relationship_pipeline import run_relationship_pipeline
 from app.services.extract import extract_text
 from app.services.chunk import chunk_text
 from app.services.concepts import (
@@ -16,8 +17,12 @@ from app.db.operations import (
     create_batch_concept
 )
 
+### Set up logger
+from app.logging import setup_logger
+logger = setup_logger(__name__)
 
-async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs):
+
+async def process_document(db, user, file: UploadFile, topic_name: str, background_tasks: BackgroundTasks, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:
@@ -70,7 +75,16 @@ async def process_document(db, user, file: UploadFile, topic_name: str, **kwargs
         batch_concepts=batch_concepts
     )
 
-    # TODO: Start relationship generation pipeline here
+    logger.info(f"Batch uploaded content for {len(batch_concepts)} concepts")
+
+    # Start relationship generation pipeline here
+    background_tasks.add_task(
+        run_relationship_pipeline,
+        concept_names=concepts,
+        user_id=user["id"]
+    )
+
+    logger.info(f"Relationship generation scheduled for {len(concepts)} concept(s)")
 
     # Return metadata to upload route
     return {

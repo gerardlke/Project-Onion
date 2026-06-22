@@ -2,18 +2,28 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
+### Set up logger
+from app.logging import setup_logger
+logger = setup_logger(__name__)
+
+
 ### Helper functions ==================================
 
-def execute_insert(db: Session, query_str: str, params: dict):
+def execute_insert(db: Session, query_str: str, params: dict = {}):
     """Helper function to insert new entry into db then return refreshed entry
 
     Input:
 
     Output:
     """
-    result = db.execute(text(f"{query_str} RETURNING *"), params)
-    db.commit()
-    return result.mappings().first()
+    try:
+        result = db.execute(text(f"{query_str} RETURNING *"), params)
+        db.commit()
+        return result.mappings().first()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Insert failed: {e}")
+        raise
 
 def execute_batch_insert(db: Session, query_str: str, params_list: list):
     """Helper function to insert batch of entries into db then return refreshed entries
@@ -24,9 +34,14 @@ def execute_batch_insert(db: Session, query_str: str, params_list: list):
     """
     if not params_list:
         return []
-    db.execute(text(f"{query_str}"), params_list)
-    db.commit()
-    return []
+    try:
+        result = db.execute(text(f"{query_str}"), params_list)
+        db.commit()
+        return []
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Batch insert failed: {e}")
+        raise
 
 def execute_select(db: Session, query_str: str, params: dict={}):
     """Helper function to select rows db
@@ -35,8 +50,12 @@ def execute_select(db: Session, query_str: str, params: dict={}):
 
     Output:
     """
-    return db.execute(text(query_str), params).mappings().all()
-
+    try:
+        return db.execute(text(query_str), params).mappings().all()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Select failed: {e}")
+        raise
 
 ### Administrative queries ============================
 
@@ -241,6 +260,20 @@ def get_concept_by_id(db: Session, concept_id: int):
     """
     return execute_select(db, query, {"concept_id": concept_id})
 
+def get_concepts_by_names(db: Session, concepts: list[str]):
+    """Database operation to get multiple concepts from Concept table by ID list
+
+    Input:
+
+    Output:
+    """
+    query = """
+        SELECT *
+        FROM concepts
+        WHERE name = ANY(:concepts)
+    """
+    return execute_select(db, query, {"concepts": concepts})
+
 def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, threshold: float = 0.5, limit: int = 10):
     """Database operation to do similarity search on embeddings 
 
@@ -251,17 +284,21 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
     query = """
         WITH calculated_distances AS (
             SELECT
-                id,
-                concept,
+                concepts.id AS id,
+                concepts.name AS name,
+                concepts.raw_text as raw_text,
                 embedding <=> :embedding AS distance
             FROM concepts
-            WHERE user_id = :user_id
-                AND id != :concept_id
+            JOIN documents ON concepts.document_id = documents.id
+            JOIN topics ON documents.topic_id = topics.id
+            JOIN users ON topics.user_id = users.id
+            WHERE users.id = :user_id
+                AND concepts.id != :concept_id
         )
-        SELECT id, concept, distance
+        SELECT id, name, raw_text, distance
         FROM calculated_distances
         WHERE distance <= :distance_threshold
-        ORDER BY distance ASC
+        ORDER BY distance DESC
         LIMIT :limit
     """
     params = {
@@ -276,7 +313,7 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
 
 ### Relations queries =======================
 
-def create_relation(db: Session, source_id: int, target_id: int, relation_type: int, weight: float = 1.0):
+def create_relation(db: Session, source_id: int, target_id: int, relation_type_id: int, weight: float = 1.0, explanation: str = ""):
     """Database operation to create a new relation between concepts in Relations table
 
     Input:
@@ -284,14 +321,15 @@ def create_relation(db: Session, source_id: int, target_id: int, relation_type: 
     Ouput:
     """
     query = """
-        INSERT INTO relations (source_id, target_id, relation_type, weight) 
-        VALUES (:source_id, :target_id, :relation_type, :weight)
+        INSERT INTO relations (source_id, target_id, relation_type_id, weight, explanation) 
+        VALUES (:source_id, :target_id, :relation_type_id, :weight, :explanation)
     """
     params = {
         "source_id": source_id,
         "target_id": target_id,
-        "relation_type": relation_type,
-        "weight": weight
+        "relation_type_id": relation_type_id,
+        "weight": weight,
+        "explanation": explanation
     }
     return execute_insert(db, query, params)
 
@@ -304,12 +342,12 @@ def get_all_relations_by_user_id(db: Session, user_id: int):
     """
     query = """
         SELECT 
-            relations.id AS relation_id AS relation_id,
+            relations.id AS relation_id,
             relations.source_id AS source_id,
             relations.target_id AS target_id,
             relation_types.name AS name
         FROM relations
-        INNER JOIN relation_types ON relations.relation_type = relation_types.id
+        INNER JOIN relation_types ON relations.relation_type_id = relation_types.id
         INNER JOIN concepts ON relations.source_id = concepts.id
         INNER JOIN documents ON concepts.document_id = documents.id
         INNER JOIN topics ON documents.topic_id = topics.id
@@ -323,7 +361,7 @@ def get_all_relations_by_user_id(db: Session, user_id: int):
             relations.target_id AS target_id,
             relation_types.name AS name
         FROM relations
-        INNER JOIN relation_types ON relations.relation_type = relation_types.id
+        INNER JOIN relation_types ON relations.relation_type_id = relation_types.id
         INNER JOIN concepts ON relations.target_id = concepts.id
         INNER JOIN documents ON concepts.document_id = documents.id
         INNER JOIN topics ON documents.topic_id = topics.id
@@ -332,7 +370,7 @@ def get_all_relations_by_user_id(db: Session, user_id: int):
     return execute_select(db, query, {"user_id": user_id})
 
 def get_relation_by_id(db: Session, id: int):
-    """Database operation to retrieve the all relations for all nodes given a user
+    """Database operation to retrieve a specific relation by its id
 
     Input:
 
@@ -377,7 +415,7 @@ def get_all_relation_types(db: Session):
         SELECT * 
         FROM relation_types
     """
-    return execute_insert(db, query)
+    return execute_select(db, query)
 
 def get_relation_type_by_id(db: Session, type_id: int):
     """Database operation to retrieve the relation type by its id
@@ -391,4 +429,18 @@ def get_relation_type_by_id(db: Session, type_id: int):
         FROM relation_types 
         WHERE id = :type_id
     """
-    return execute_insert(db, query, {"type_id": type_id})
+    return execute_select(db, query, {"type_id": type_id})
+
+def get_relation_type_by_name(db: Session, name: str):
+    """Database operation to retrieve the relation type by its name
+
+    Input:
+
+    Ouput:
+    """
+    query = """
+        SELECT * 
+        FROM relation_types 
+        WHERE name = :name
+    """
+    return execute_select(db, query, {"name": name})

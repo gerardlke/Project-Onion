@@ -29,7 +29,7 @@ async def project_embeddings(embeddings: list[list[float]], dimensions: int = 3)
 
     if n_samples < dimensions:
         logger.warning(
-            f"{n_samples} concept(s) available - cannot project to {dimensions}D."
+            f"{n_samples} concept(s) available - cannot project to {dimensions}D. "
             f"Falling back to {n_samples}D. More uploads will produce a richer universe."
         )
         dimensions = n_samples
