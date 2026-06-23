@@ -30,6 +30,10 @@ function Login({ onLogin }) {
       }
 
       const user = await response.json();
+      localStorage.setItem('token', user.access_token);
+      localStorage.setItem('username', username);
+      console.log("USERNAME: ", localStorage.username)
+      console.log("TOKEN: ", localStorage.token)
       onLogin(user.username);
       navigate('/');
     } catch (error) {

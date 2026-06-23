@@ -14,7 +14,7 @@ import Register from './Login/Register';
  * - Keep the network canvas mounted after login so the universe is visible before and after upload.
  */
 function App() {
-  const [loggedInUser, setLoggedInUser] = useState('');
+  const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username') || '');
   const [topics, setTopics] = useState([]);
   const [documentsByTopic, setDocumentsByTopic] = useState({});
   const [newTopicName, setNewTopicName] = useState('');
@@ -44,7 +44,11 @@ function App() {
 
     async function loadTopics() {
       try {
-        const response = await fetch('/upload/get_topics');
+        const response = await fetch('/upload/get_topics', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Topic request failed');
         }
@@ -52,7 +56,8 @@ function App() {
         const result = await response.json();
         const loadedTopics = (result.topics || result.data || [])
           .map(normalizeTopic)
-          .filter((topic) => topic.name);
+          .filter((topic) => topic.name)
+        console.log("TOPICS: ", loadedTopics);
         setTopics(loadedTopics);
       } catch (error) {
         setTopicMessage('Could not load topics. You can still create a new one.');
@@ -71,6 +76,7 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.token}`
         },
         body: JSON.stringify({
           name: newTopicName,
@@ -117,6 +123,9 @@ function App() {
     try {
       const response = await fetch('/upload/new_document', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.token}`
+        },
         body: formData,
       });
 
