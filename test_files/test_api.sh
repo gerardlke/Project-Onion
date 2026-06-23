@@ -40,12 +40,12 @@ curl -X POST $BASE_URL/upload/new_document \
      -F "topic_name=CS1101s"
 echo -e "\n"
 
-# echo "[API] POST /upload/new_document - big notes"
-# curl -X POST $BASE_URL/upload/new_document \
-#      -H "Authorization: Bearer $TOKEN" \
-#      -F "file=@test_files/note_big.txt" \
-#      -F "topic_name=CS1101s"
-# echo -e "\n"
+echo "[API] POST /upload/new_document - big notes"
+curl -X POST $BASE_URL/upload/new_document \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@test_files/note_big.txt" \
+     -F "topic_name=CS1101s"
+echo -e "\n"
 
 echo "===== 3. UNIVERSE API ====="
 echo "[API] GET /universe/topics"
@@ -67,8 +67,8 @@ echo "[API] GET /universe/relations"
 curl -X GET $BASE_URL/universe/relations -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
-# echo "[API] GET /universe/relation/{id}"
-# curl -X GET $BASE_URL/universe/relation/456 -H "Authorization: Bearer $TOKEN"
-# echo -e "\n"
+echo "[API] GET /universe/relation/{id}"
+curl -X GET $BASE_URL/universe/relation/1 -H "Authorization: Bearer $TOKEN"
+echo -e "\n"
 
-# echo "--- Testing Complete ---"
+echo "--- Testing Complete ---"
