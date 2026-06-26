@@ -10,9 +10,9 @@ from app.configs.config import ENCODER
 logger = setup_logger(__name__)
 
 ### Set up configs for encoder
-logger.info("Setting up encoder.")
+logger.info("Setting up encoder")
 model = SentenceTransformer(ENCODER)
-logger.info("Encoder downloaded.")
+logger.info("Encoder downloaded")
 
 
 def generate_embeddings(concepts: list[str]):
@@ -26,7 +26,7 @@ def generate_embeddings(concepts: list[str]):
         concepts,
         convert_to_numpy=True
     )
-    return embeddings
+    return embeddings.tolist()
 
 def reduce_dimensions(embeddings, dimensions: int = 3):
     """Reduce dimensions of embedded notes to desired dimensions via PCA and return new coordinates

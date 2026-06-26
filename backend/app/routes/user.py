@@ -1,3 +1,4 @@
+import os
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
@@ -5,15 +6,21 @@ from fastapi import (
     HTTPException,
 )
 
+from app.services.authenticate import (
+    hash_password,
+    verify_password,
+    create_access_token    
+)
 from app.db.session import get_db
 from app.db.operations import (
     create_user,
-    get_user_by_username,
+    get_user_by_username
 )
 from app.schemas.user import (
     CreateUserRequest,
     LoginRequest,
     UserResponse,
+    TokenResponse
 )
 from app.logging import setup_logger
 
@@ -38,28 +45,28 @@ async def create_user_request(
         request.username
     )
 
-    print("existing_user", existing_user)
-
     if existing_user:
         raise HTTPException(
             status_code=400,
             detail="Username already exists"
         )
 
+    hashed_password = hash_password(request.password)
+
     user = create_user(
         db,
-        request.username
-    )
+        request.username,
+        hashed_password
+    )   
     logger.info(f"Created new user with username {request.username}")
-    print("user", user)
 
     return UserResponse(
-        id=user.id,
-        username=user.username
+        id=user["id"],
+        username=user["username"]
     )
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=TokenResponse)
 async def login_route(
     request: LoginRequest,
     db: Session = Depends(get_db)
@@ -80,9 +87,22 @@ async def login_route(
             status_code=404,
             detail="User not found"
         )
-    logger.info(f"Found user with username {request.username}")
 
-    return UserResponse(
-        id=user.id,
-        username=user.username
+    user = user[0]
+
+    if not verify_password(request.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect password entered"
+        )
+    logger.info(f"User '{request.username}' verified")
+
+    access_token = create_access_token(user["id"])
+    logger.info(f"Authentication token for '{request.username}' created")
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        id=user["id"],
+        username=user["username"]
     )

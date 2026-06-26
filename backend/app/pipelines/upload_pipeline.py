@@ -1,64 +1,94 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, BackgroundTasks
 
+from app.pipelines.relationship_pipeline import run_relationship_pipeline
 from app.services.extract import extract_text
 from app.services.chunk import chunk_text
-from app.services.concepts import extract_concepts
-from app.services.embed import generate_embeddings, reduce_dimensions
+from app.services.concepts import (
+    extract_concepts,
+    find_existing
+)
+from app.services.embed import (
+    generate_embeddings
+)
 
-from app.db.operations import create_document, create_concepts
-from app.schemas.upload import PipelineDocument
+from app.db.operations import (
+    get_topic_by_name,
+    create_document,
+    create_batch_concept
+)
+
+### Set up logger
+from app.logging import setup_logger
+logger = setup_logger(__name__)
 
 
-async def process_document(file: UploadFile, db, **kwargs):
+async def process_document(db, user, file: UploadFile, topic_name: str, background_tasks: BackgroundTasks, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:
 
     Ouput:
     """
-    # Extraction pipeline
+    # Extract raw text and save topic/document to db first
     raw_text = await extract_text(file)
-    chunks = chunk_text(raw_text)
-    concepts = extract_concepts(chunks)
+    
+    topic = get_topic_by_name(db, topic_name)[0]
 
-    # Embedding and reducing to get latent positions in universe
-    concept_strings = [concept.concept for concept in concepts]
-    embeddings = generate_embeddings(
-        concept_strings
-    )
-    coordinates = reduce_dimensions(
-        embeddings,
-        dimensions=3
-    )
-    for concept, coordinate in zip(concepts, coordinates):
-        concept.x = float(coordinate[0])
-        concept.y = float(coordinate[1])
-        concept.z = float(coordinate[2])
-
-    # Build internal object
-    pipeline_document = PipelineDocument(
-        filename=file.filename,
-        content_type=file.content_type,
-        raw_text=raw_text,
-        chunks=chunks,
-        concepts=concepts
-    )
-
-    # Save to DB
     document = create_document(
         db=db,
+        topic_id=topic["id"],
         filename=file.filename,
+        content_type=file.content_type,
         raw_text=raw_text
     )
-    create_concepts(
+
+    # Break text up into chunks, then extract concept names and descriptions
+    concepts_dict = {}
+    chunks = chunk_text(raw_text)
+    for chunk in chunks:
+        concepts = await extract_concepts(chunk)
+        for c in concepts:
+            if c.get("name", ""):
+
+                # Aggregate concepts to reduce cluster
+                match = find_existing(c.get("name"), concepts_dict)
+
+                if match is not None:
+                    concepts_dict[match]["raw_text"] += c.get("description", "")
+                else:
+                    concepts_dict[c.get("name")] = {
+                        "document_id": document.id,
+                        "name": c.get("name"),
+                        "raw_text": c.get("description", "")
+                    }
+
+    # Embed aggregated concepts
+    batch_concepts, concepts = [], []
+    for name, concept in concepts_dict.items():
+        concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
+        batch_concepts.append(concept)
+        concepts.append(name)
+
+    # Save concepts to db in batches
+    create_batch_concept(
         db=db,
-        document_id=document.id,
-        pipeline_document=pipeline_document
+        batch_concepts=batch_concepts
     )
+
+    logger.info(f"Batch uploaded content for {len(batch_concepts)} concepts")
+
+    # Start relationship generation pipeline here
+    background_tasks.add_task(
+        run_relationship_pipeline,
+        concept_names=concepts,
+        user_id=user["id"]
+    )
+
+    logger.info(f"Relationship generation scheduled for {len(concepts)} concept(s)")
 
     # Return metadata to upload route
     return {
         "id": document.id,
-        "chunks": len(chunks),
-        "concepts": len(concepts)
+        "num_chunks": len(chunks),
+        "concepts": concepts
     }

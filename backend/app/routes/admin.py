@@ -68,7 +68,7 @@ async def administrative_db_reset(
                 detail=result.get("detail", "Failed to clear data.")
             )
             
-        logger.info("Database successfully cleared.")
+        logger.info("Database successfully cleared")
         return {"status": "success", "message": "All concepts, documents, and users have been cleared."}
         
     except HTTPException as http_error:

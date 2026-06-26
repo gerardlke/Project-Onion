@@ -1,3 +1,5 @@
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 ### Set up configs
 from app.configs.config import (
     CHUNK_SIZE,
@@ -6,21 +8,16 @@ from app.configs.config import (
 
 
 def chunk_text(text: str):
-    """Chunks text into smaller chunks
+    """
+    Split document into overlapping semantic chunks
 
     Input:
 
     Ouput:
     """
-
-    chunks = []
-    start = 0
-
-    # TODO: Find a more efficient chunking method
-    while start < len(text):
-        end = start + CHUNK_SIZE
-        chunk = text[start:end]
-        chunks.append(chunk)
-        start += CHUNK_SIZE - CHUNK_OVERLAP
-        
-    return chunks
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+        separators=["\n\n", "\n", ". ", " "],
+    )
+    return splitter.split_text(text)

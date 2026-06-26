@@ -28,8 +28,17 @@ function Login({ onLogin }) {
         setErrorMessage(errorBody?.detail || 'Login failed. Please try again.');
         return;
       }
-
+      
+      // Parse json from API response
       const user = await response.json();
+
+      // Set global variables required later
+      const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now in ms
+      localStorage.setItem('tokenExpiresAt', String(expiresAt));
+      localStorage.setItem('token', user.access_token);
+      localStorage.setItem('username', username);
+      
+      // Confirm log in and navigate to universe page
       onLogin(user.username);
       navigate('/');
     } catch (error) {

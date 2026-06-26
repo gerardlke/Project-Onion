@@ -2,23 +2,39 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UniverseNode(BaseModel):
+class TopicNode(BaseModel):
     id: int
-    concept: str
-    frequency: int
-    x: float
-    y: float
-    z: float | None
+    name: str
+    description: str
 
-class UniverseResponse(BaseModel):
-    nodes: list[UniverseNode]
+class TopicResponse(BaseModel):
+    nodes: list[TopicNode]
+
+class ConceptNode(BaseModel):
+    id: int
+    document_id: int
+    topic_id: int
+    coordinates: list[float]
+
+class NodeResponse(BaseModel):
+    nodes: list[ConceptNode]
 
 class NodeDetailResponse(BaseModel):
     id: int
     concept: str
-    frequency: int
-    chunk_index: Optional[int] = None
-    document_id: int
-    x: float
-    y: float
-    z: float | None
+    text: str
+
+class RelationEdge(BaseModel):
+    id: int
+    source_id: int 
+    target_id: int
+    name: str
+
+class RelationResponse(BaseModel):
+    edges: list[RelationEdge]
+
+class RelationDetailResponse(BaseModel):
+    id: int
+    name: str
+    description: str
+    explanation: str

@@ -4,9 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.database import (
     engine, 
+    SessionLocal,
     Base
 )
-from app.logging import setup_logger
+from app.db.seed import seed_relation_types
 from app.routes import (
     admin,
     upload,
@@ -14,11 +15,14 @@ from app.routes import (
     user
 )
 
+### Set up configs
 from app.configs.config import RESET_DB
 
-### Application Lifespan ==================================
-
+### Set up logger
+from app.logging import setup_logger
 logger = setup_logger(__name__)
+
+### Application Lifespan ==================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,6 +44,13 @@ async def lifespan(app: FastAPI):
     if RESET_DB:
         Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+    # Seed static data
+    db = SessionLocal()
+    try:
+        seed_relation_types(db)
+    finally:
+        db.close()
 
     yield
     logger.info("Shutting down backend...")
