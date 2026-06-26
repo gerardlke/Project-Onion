@@ -1,0 +1,102 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 220px;
+  background: linear-gradient(180deg, #0d1526 0%, #0b0f1e 100%);
+  border-right: 1px solid rgba(99, 120, 255, 0.18);
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0 24px;
+  z-index: 200;
+
+  /* Hidden off-screen by default */
+  transform: translateX(-100%);
+  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar--open {
+  transform: translateX(0);
+}
+
+/* Dim backdrop when sidebar is open */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+/* Avatar + username block */
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 20px;
+}
+
+.sidebar-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 0;
+  /* Subtle glow matching the indigo accent */
+  box-shadow: 0 0 16px rgba(79, 70, 229, 0.45);
+}
+
+.sidebar-username {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.04em;
+  text-align: center;
+  word-break: break-all;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 120, 255, 0.3), transparent);
+  margin: 0 16px 20px;
+}
+
+/* Nav items */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.sidebar-signout {
+  width: 100%;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sidebar-signout:hover {
+  background: rgba(248, 113, 113, 0.16);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */

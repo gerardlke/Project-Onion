@@ -1,0 +1,98 @@
+.topic-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* "New Topic" pill button */
+.new-topic-btn {
+  background: transparent;
+  border: 1px solid rgba(99, 120, 255, 0.5);
+  border-radius: 8px;
+  color: #a5b4fc;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px 16px;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.new-topic-btn:hover {
+  background: rgba(99, 120, 255, 0.12);
+  border-color: rgba(99, 120, 255, 0.8);
+}
+
+/* New topic form inside the modal */
+.new-topic-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.new-topic-form label {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.new-topic-form input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font: inherit;
+  padding: 10px 12px;
+  transition: border-color 0.15s;
+}
+
+.new-topic-form input:focus {
+  border-color: rgba(99, 120, 255, 0.7);
+  outline: none;
+}
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   Full-screen upload overlay with spinner.
+   pointer-events: none lets clicks pass through so the user
+   can still navigate to the universe while uploading.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+.upload-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 11, 22, 0.82);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 150;
+  pointer-events: none;
+}
+
+.upload-spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid rgba(99, 120, 255, 0.15);
+  border-top-color: #6378ff;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.upload-overlay-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
