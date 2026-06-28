@@ -30,10 +30,12 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
     Ouput:
     """
     # Extract raw text and save topic/document to db first
+    print("extracting text")
     raw_text = await extract_text(file)
     
     topic = get_topic_by_name(db, topic_name)[0]
 
+    print("creating document")
     document = create_document(
         db=db,
         topic_id=topic["id"],
@@ -43,6 +45,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
     )
 
     # Break text up into chunks, then extract concept names and descriptions
+    print("chunking document")
     concepts_dict = {}
     chunks = chunk_text(raw_text)
     for chunk in chunks:
@@ -63,12 +66,14 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                     }
 
     # Embed aggregated concepts
+    print("embedding document")
     batch_concepts, concepts = [], []
     for name, concept in concepts_dict.items():
         concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
         batch_concepts.append(concept)
         concepts.append(name)
 
+    print("saving document")
     # Save concepts to db in batches
     create_batch_concept(
         db=db,

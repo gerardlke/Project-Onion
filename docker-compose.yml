@@ -28,6 +28,20 @@ services:
     depends_on:
       - postgres
 
+    # Increase memory allocation to container
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 4G
+    #     reservations:
+    #       memory: 2G
+
+          # For GPU capabilities
+          # devices:
+          #   - driver: nvidia
+          #     count: 1
+          #     capabilities: [gpu]
+
   # frontend:
   #   build:
   #     context: ./universe-web

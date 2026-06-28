@@ -15,6 +15,10 @@ from app.routes import (
     user
 )
 
+# Warm up from llm and relationship service
+from app.services.llm import warm_up
+from app.services.relationship import _get_nli
+
 ### Set up configs
 from app.configs.config import RESET_DB
 
@@ -35,9 +39,6 @@ async def lifespan(app: FastAPI):
     """
 
     logger.info("Starting backend...")
-
-    # TODO: Load things needed in backend
-    # app.state.embedding_model = load_embedding_model()
     
     # Setting up database
     logger.info("Starting database...")
@@ -46,11 +47,19 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
 
     # Seed static data
+    logger.info("Seeding database...")
     db = SessionLocal()
     try:
         seed_relation_types(db)
     finally:
         db.close()
+    
+    # Loading models
+    # logger.info("Warming up ML models...")
+    # _get_nli()
+    # await warm_up()
+
+    logger.info("Backend started")
 
     yield
     logger.info("Shutting down backend...")
