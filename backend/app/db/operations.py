@@ -136,6 +136,20 @@ def create_topic(db: Session, user_id: int, name: str, description: str):
     params = {"user_id": user_id, "name": name, "description": description}
     return execute_insert(db, query, params)
 
+def get_topic_by_id(db: Session, id: int):
+    """Database operation to retrieve a topic by its id
+
+    Input:
+
+    Ouput:
+    """
+    query = """
+        SELECT * 
+        FROM topics 
+        WHERE id = :id
+    """
+    return execute_select(db, query, {"id": id})
+
 def get_topic_by_name(db: Session, name: str):
     """Database operation to retrieve a topic by its name
 

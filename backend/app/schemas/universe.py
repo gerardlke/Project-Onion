@@ -10,6 +10,11 @@ class TopicNode(BaseModel):
 class TopicResponse(BaseModel):
     nodes: list[TopicNode]
 
+class TopicDetailResponse(BaseModel):
+    id: int
+    topic: str
+    description: str
+
 class ConceptNode(BaseModel):
     id: int
     document_id: int
