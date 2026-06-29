@@ -186,7 +186,7 @@ def get_topic_by_document_id(db: Session, document_id: int):
     Ouput:
     """
     query = """
-        SELECT * 
+        SELECT topics.id AS id, topics.name AS name, topics.description AS description
         FROM topics
         INNER JOIN documents ON topics.id = documents.topic_id
         WHERE documents.id = :document_id
