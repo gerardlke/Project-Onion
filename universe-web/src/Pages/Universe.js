@@ -132,7 +132,7 @@ export default function Universe() {
               {activeNode.label}
             </h3>
             <p style={{ fontSize: '16px', color: '#a5b4fc', margin: '0 0 20px', fontWeight: 'bold' }}>
-              {/* Topic: {activeNode.topicName} */}
+              Topic: {activeNode.topicName}
             </p>
             <div style={{ fontSize: '18px', lineHeight: '1.6', opacity: 0.9, marginBottom: '30px' }}>
               {activeNode.text || "No description available."}

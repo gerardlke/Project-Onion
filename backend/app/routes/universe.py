@@ -99,7 +99,7 @@ async def get_topic_detail(
         
         topic = topic[0]
 
-        return NodeDetailResponse(
+        return TopicDetailResponse(
             id=topic["id"],
             topic=topic["name"],
             description=topic["description"]
