@@ -27,9 +27,11 @@ The semantic pipeline processes source documents through the following phases:
 ## Technology Stack
 
 ### Frontend
-- **Framework:** React
-- **Styling:** HTML / CSS
-- **3D Function:** React 3 Fiber
+- **Framework:** React (Create React App)
+- **Routing:** React Router v6
+- **Styling:** HTML / CSS (component-scoped stylesheets)
+- **3D Rendering:** React Three Fiber with `@react-three/drei`
+- **Authentication:** JWT stored in localStorage, attached as Bearer token on all authenticated API calls
 
 ### Backend
 - **Framework:** FastAPI
@@ -38,10 +40,12 @@ The semantic pipeline processes source documents through the following phases:
 - **ASGI Server:** Uvicorn
 
 ### Database
-- **Engine:** PostgreSQL
+- **Engine:** PostgreSQL with pgvector extension
 
 ### AI / Natural Language Processing (NLP)
 - **Embeddings:** SentenceTransformers
+- **Concept Extraction:** Configurable LLM (local HuggingFace)
+- **Relationship Classification:** NLI (cross-encoder/nli-deberta-v3-small)
 - **Dimensionality Reduction:** PCA
 
 ### Infrastructure
@@ -70,8 +74,13 @@ project-root/
   universe-web/
     public/
     src/
+      Components/
+      Data/
+      Images/
+      Login/
+      Pages/
     Dockerfile
-    package-lock.josn
+    package-lock.json
     package.json
   docker-compose.yml
   .env
@@ -85,8 +94,8 @@ project-root/
 
 Ensure the following software is installed on the system:
 
-* Docker
-* Docker Compose
+- Docker
+- Docker Compose
 
 Verify the installation using:
 
@@ -102,11 +111,19 @@ Create a `.env` file in the project root directory and configure the required en
 Example:
 
 ```env
+# Database
 POSTGRES_USER=<user>
 POSTGRES_PASSWORD=<password>
 POSTGRES_DB=<db_name>
-
 DATABASE_URL=postgresql://<user>:<password>@postgres:5432/<db_name>
+
+# Set to true to wipe and recreate the database schema on startup
+RESET_DB=false
+
+# JWT secret for user authentication — minimum 32 characters
+JWT_SECRET_KEY=<super-secret-key>
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=60
 ```
 
 Adjust the values according to the local development environment.
@@ -134,7 +151,7 @@ After all containers have started successfully:
 Frontend
 
 ```text
-http://localhost:3001
+http://localhost:3000
 ```
 
 Backend API
@@ -159,7 +176,15 @@ docker compose down
 
 ### Resetting the Database
 
-If database credentials or schema configurations have changed, remove the existing database volume before rebuilding:
+To wipe and recreate the schema without removing the Docker volume, set the following in `.env`:
+
+```env
+RESET_DB=true
+```
+
+Then restart the backend. Set it back to `false` after the first successful start to avoid wiping data on every restart.
+
+To fully remove the database volume (e.g. if credentials or schema configurations have changed):
 
 ```bash
 docker compose down -v
@@ -170,10 +195,49 @@ This will recreate the PostgreSQL instance using the latest configuration.
 
 ### Development Notes
 
+**Running the frontend locally**
+
+The frontend can be run outside Docker for faster development iteration:
+
+```bash
+cd universe-web
+npm install
+npm start
+```
+
+The app will be available at `http://localhost:3000`. When running locally, the frontend proxies API requests to the backend. Ensure the backend is running and accessible — either locally at `http://localhost:8000` or via Docker — and that the proxy is configured accordingly in `package.json`:
+
+```json
+"proxy": "http://localhost:8000"
+```
+
+When running the full stack via Docker Compose, the proxy should point to the Docker backend service name instead.
+
+**Running the backend locally**
+
+The backend can be run outside Docker for faster development iteration:
+
+```bash
+cd backend
+pip install -r backend_requirements.txt
+uvicorn app.main:app --reload
+```
+
+When running locally, ensure:
+
+- A PostgreSQL instance is running and accessible at `localhost:5432`
+- The `pgvector` extension is installed on that PostgreSQL binary (`brew install pgvector` on macOS, `apt install postgresql-16-pgvector` on Linux)
+- `DATABASE_URL` in `.env` uses `localhost` rather than the Docker service name `postgres`
+- `TOKENIZERS_PARALLELISM=false` is set in your environment to prevent tokenizer thread conflicts with the async server
+
+The database schema and seed data are created automatically on backend startup — no manual migration step is required.
+
+**Docker networking**
+
 The application is configured using Docker Compose with separate containers for:
 
 * Frontend
 * Backend
 * PostgreSQL Database
 
-Within the Docker network, backend services connect to PostgreSQL using the hostname `postgres`. When running components outside Docker, local connections should use `localhost` instead.
+Within the Docker network, the backend connects to PostgreSQL using the hostname `postgres`. When running components outside Docker, local connections should use `localhost` instead.
