@@ -11,7 +11,7 @@ SIMILARITY_THRESHOLD = 0.3
 RELATIONSHIP_LIMIT = 10
 
 # Database configs
-RESET_DB = True
+RESET_DB = False
 
 # Concept extraction configs
 CHUNK_SIZE = 1000

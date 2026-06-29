@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+
 import NetworkNode from './NetworkNodes';
 import { createConceptNode, getTopicColor } from '../Data/network.js';
 
@@ -10,14 +11,26 @@ import { createConceptNode, getTopicColor } from '../Data/network.js';
 export default function NetworkScene({
   topics = [],
   conceptNodes = [],
-  edges = []
+  edges = [],
+  activeNode,
+  setActiveNode
 }) {
-  const [activeNode, setActiveNode] = useState(null);
+  const [visibleNodes, setVisibleNodes] = useState([]);
+  
+  useEffect(() => {
+    async function processNodes() {
+      const nodes = await Promise.all(
+        conceptNodes.map(async (concept) => 
+          await createConceptNode(concept, getTopicColor(concept.topic_name, topics))
+        )
+      );
+      setVisibleNodes(nodes);
+    }
 
-  // Derive renderable scene data from React state instead of storing duplicate node state.
-  const visibleNodes = conceptNodes.map((concept) =>
-    createConceptNode(concept, getTopicColor(concept.topic_name, topics))
-  );
+    if (conceptNodes.length > 0) {
+      processNodes();
+    }
+  }, [conceptNodes, topics]);
 
   return (
     <Canvas camera={{ position: [0, 0, 7], fov: 60 }}>

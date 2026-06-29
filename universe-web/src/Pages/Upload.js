@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch } from '../api';
+import { apiFetch } from '../Api';
 
 import './Upload.css';
 
