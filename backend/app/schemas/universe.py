@@ -41,5 +41,6 @@ class RelationResponse(BaseModel):
 class RelationDetailResponse(BaseModel):
     id: int
     name: str
+    weight: float
     description: str
     explanation: str

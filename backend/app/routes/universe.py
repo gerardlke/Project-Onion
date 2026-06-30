@@ -248,9 +248,18 @@ async def get_relation_detail(
         logger.info(f"Extracting relation information for relation id '{relation_id}'")
         relation = get_relation_by_id(db, relation_id)
 
+        if not relation:
+            raise HTTPException(
+                status_code=404,
+                detail="Relation not found"
+            )
+        
+        relation = relation[0]
+
         return RelationDetailResponse(
             id=relation["id"],
             name=relation["name"],
+            weight=relation["weight"],
             description=relation["description"],
             explanation=relation["explanation"]
         )

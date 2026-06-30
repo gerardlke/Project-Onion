@@ -7,7 +7,7 @@ ENCODER = "all-MiniLM-L6-v2"
 MINI_LLM = "gpt-4o-mini"
 
 # Relationship configs
-SIMILARITY_THRESHOLD = 0.3
+SIMILARITY_THRESHOLD = 0.7
 RELATIONSHIP_LIMIT = 10
 
 # Database configs

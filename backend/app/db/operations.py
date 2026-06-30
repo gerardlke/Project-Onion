@@ -394,11 +394,12 @@ def get_relation_by_id(db: Session, id: int):
         SELECT 
             relations.id AS id, 
             relation_types.name AS name,
+            relations.weight AS weight,
             relation_types.description AS description,
             relations.explanation AS explanation
         FROM relations
-        INNER JOIN relation_types ON relations.relation_type_id == relation_types.id
-        WHERE relations.id == :id
+        INNER JOIN relation_types ON relations.relation_type_id = relation_types.id
+        WHERE relations.id = :id
     """
     return execute_select(db, query, {"id": id})
 
