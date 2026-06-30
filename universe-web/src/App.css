@@ -23,12 +23,12 @@
 }
 
 .network-panel {
-  background: #0b0f19;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  height: clamp(300px, 48vh, 520px);
+  background: transparent;
+  /* border: 1px solid rgba(255, 255, 255, 0.22); */
+  /* border-radius: 8px; */
+  height: 80%;
   overflow: hidden;
-  width: min(100%, 980px);
+  width: 100%;
 }
 
 .network-panel canvas {

@@ -13,27 +13,43 @@ export default function NetworkScene({
   conceptNodes = [],
   edges = [],
   activeNode,
-  setActiveNode
+  setActiveNode,
+  onProcessingChange
 }) {
   const [visibleNodes, setVisibleNodes] = useState([]);
   
   useEffect(() => {
+    let cancelled = false;
+    
     async function processNodes() {
-      const nodes = await Promise.all(
-        conceptNodes.map(async (concept) => 
-          await createConceptNode(concept, getTopicColor(concept.topic_name, topics))
-        )
-      );
-      setVisibleNodes(nodes);
+      onProcessingChange?.(true);
+      try {
+        const nodes = await Promise.all(
+          conceptNodes.map((concept) =>
+            createConceptNode(concept, getTopicColor(concept.topic_name, topics))
+          )
+        );
+        if (!cancelled) setVisibleNodes(nodes);
+      } finally {
+        if (!cancelled) onProcessingChange?.(false);
+      }
     }
 
     if (conceptNodes.length > 0) {
       processNodes();
+    } else {
+      setVisibleNodes([]);
+      onProcessingChange?.(false);
     }
+    return () => { cancelled = true; };
   }, [conceptNodes, topics]);
 
   return (
-    <Canvas camera={{ position: [0, 0, 7], fov: 60 }}>
+    <Canvas 
+      camera={{ position: [0, 0, 7], fov: 60 }}
+      gl={{ alpha: true }}
+      style={{ background: 'transparent' }}
+  >
       <ambientLight intensity={0.6} />
       <pointLight position={[10, 10, 10]} />
 

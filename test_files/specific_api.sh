@@ -23,4 +23,12 @@ echo "[API] GET /universe/nodes"
 curl -X GET "$BASE_URL/universe/nodes?dimensions=3" -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
+echo "[API] GET /universe/relations"
+curl -X GET $BASE_URL/universe/relations -H "Authorization: Bearer $TOKEN"
+echo -e "\n"
+
+echo "[API] GET /universe/relation/{id}"
+curl -X GET $BASE_URL/universe/relation/1 -H "Authorization: Bearer $TOKEN"
+echo -e "\n"
+
 echo "--- Testing Complete ---"

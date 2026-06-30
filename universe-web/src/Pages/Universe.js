@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { apiFetch } from '../Api';
 import NetworkScene from '../Components/NetworkScene';
+import './Universe.css';
 
 
 export default function Universe() {
@@ -13,9 +14,10 @@ export default function Universe() {
   const [conceptNodes, setConceptNodes] = useState([]);
   const [edges, setEdges] = useState([]);
 
-  const [activeNode, setActiveNode] = useState(null); // Lifted state
+  const [activeNode, setActiveNode] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [nodesProcessing, setNodesProcessing] = useState(false);
   const [error, setError] = useState('');
 
   async function fetchUniverse() {
@@ -69,55 +71,55 @@ export default function Universe() {
   }, []);
   
   return (
-    <div className="app">
-      <section className="page-content">
-        <h1>Your Universe</h1>
-      </section>
-
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button className="upload-button" onClick={() => navigate('/')}>
-          ← Back to Upload
-        </button>
-        {/* Manual refresh that refetches nodes and relations */}
-        <button
-          className="upload-button"
-          onClick={() => { hasFetched.current = false; fetchUniverse(); }}
-          disabled={loading}
-        >
-          {loading ? 'Loading...' : 'Refresh Universe'}
-        </button>
-      </div>
-
-      {/* Loading state during API call */}
-      {loading && (
-        <p className="status-message">Loading your universe...</p>
-      )}
-
-      {error && <p className="status-message">{error}</p>}
-
+    <div className="universe-page">
+      {/* Full network panel */}
       {!loading && (
-        <section className="network-panel" aria-label="Concept network">
+        <section className="network-panel-full" aria-label="Concept network">
           <NetworkScene
             topics={topics}
             conceptNodes={conceptNodes}
             edges={edges}
             activeNode={activeNode}
             setActiveNode={setActiveNode}
+            onProcessingChange={setNodesProcessing}
           />
         </section>
+      )}
+
+      {/* Floating header overlay */}
+      <header className="universe-header">
+        <div className="universe-controls">
+          <button className="universe-btn" onClick={() => navigate('/')}>
+            ← Back to Upload
+          </button>
+          <button
+            className="universe-btn universe-btn--accent"
+            onClick={() => { hasFetched.current = false; fetchUniverse(); }}
+            disabled={loading || nodesProcessing}
+          >
+            {(loading || nodesProcessing) ? 'Loading…' : 'Refresh Universe'}
+          </button>
+        </div>
+      </header>
+
+      {(loading || nodesProcessing) && (
+        <p className="status-message universe-status">Loading your universe...</p>
+      )}
+      {error && (
+        <p className="status-message universe-status">{error}</p>
       )}
 
       <div style={{
         position: 'fixed',
         top: 0,
-        right: activeNode ? '0' : '-400px', // Wider panel
+        right: activeNode ? '0' : '-400px',
         width: '400px',
         height: '100vh',
-        background: 'rgba(23, 30, 53, 0.95)', // Matches .popup background
-        backdropFilter: 'blur(10px)',         // Sleek frosted effect
+        background: 'rgba(23, 30, 53, 0.95)',
+        backdropFilter: 'blur(10px)',
         borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
         color: '#fff',
-        transition: 'right 0.4s cubic-bezier(0.16, 1, 0.3, 1)', // Smoother slide
+        transition: 'right 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
         zIndex: 3000,
         padding: '40px',
@@ -137,17 +139,12 @@ export default function Universe() {
             <div style={{ fontSize: '18px', lineHeight: '1.6', opacity: 0.9, marginBottom: '30px' }}>
               {activeNode.text || "No description available."}
             </div>
-            <button 
+            <button
               onClick={() => setActiveNode(null)}
               style={{
-                background: 'white',
-                color: 'black',
-                border: 'none',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontFamily: 'inherit'
+                background: 'white', color: 'black', border: 'none',
+                padding: '12px 24px', borderRadius: '8px', cursor: 'pointer',
+                fontWeight: 'bold', fontFamily: 'inherit'
               }}
             >
               Close View
@@ -155,7 +152,6 @@ export default function Universe() {
           </>
         )}
       </div>
-
     </div>
   );
 }

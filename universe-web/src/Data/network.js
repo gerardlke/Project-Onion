@@ -10,7 +10,25 @@ export function getTopicColor(topicName, topics) {
   return TOPIC_COLORS[(index < 0 ? 0 : index) % TOPIC_COLORS.length];
 }
 
+
 // Creating the concept node in the network
+const topicCache = new Map();
+
+function fetchTopicCached(topicId) {
+  if (topicCache.has(topicId)) {
+    return topicCache.get(topicId);
+  }
+
+  const requestPromise = (async () => {
+    const response = await apiFetch(`/universe/topic/${topicId}`);
+    if (!response.ok) throw new Error('Failure while pulling topic details');
+    return response.json();
+  })();
+
+  topicCache.set(topicId, requestPromise);
+  return requestPromise;
+}
+
 export async function createConceptNode(concept, color) {
 
   const nodeResponse = await apiFetch(`/universe/node/${concept.id}`);
@@ -19,9 +37,7 @@ export async function createConceptNode(concept, color) {
 
   const radius = 0.2 + (nodeResult.text.length * 0.002);
   
-  const topicResponse = await apiFetch(`/universe/topic/${concept.topic_id}`);
-  if (!topicResponse.ok) throw new Error('Failure while pulling topic details');
-  const topicResult = await topicResponse.json();
+  const topicResult = await fetchTopicCached(concept.topic_id);
 
   return {
     id: concept.id,
