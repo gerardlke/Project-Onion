@@ -1,3 +1,4 @@
+import time
 from transformers import pipeline as hf_pipeline
 
 from app.db.operations import (
@@ -30,6 +31,13 @@ def _get_nli():
         )
         logger.info("NLI classifier loaded")
     return _nli
+
+
+async def nli_warm_up():
+    """Pre-load the NLI model into memory during application startup before first call"""
+    logger.info("Warming up NLI model...")
+    await _get_nli()
+    logger.info("NLI model warm-up complete")
 
 
 def classify_relation(source: dict, target: dict, type_lookup: dict):
@@ -88,6 +96,7 @@ def generate_relationships(db, concepts: list, user_id: int):
 
     total = 0
     failed = []
+    start = time.time()
 
     for concept in concepts:
         try:
@@ -135,7 +144,8 @@ def generate_relationships(db, concepts: list, user_id: int):
     summary = {
         "concepts_processed": len(concepts),
         "relationships_created": total,
-        "failed_concept_ids": failed
+        "failed_concept_ids": failed,
+        "time taken": round(time.time() - start)
     }
     logger.info(f"Relationship generation complete: {summary}")
     return summary

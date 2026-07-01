@@ -4,7 +4,12 @@ MAX_FILE_SIZE_MB=500
 
 # Model configs
 ENCODER = "all-MiniLM-L6-v2"
-MINI_LLM = "gpt-4o-mini"
+LLM = "Qwen/Qwen2.5-1.5B-Instruct"
+
+# Concept aggregation configs
+FUZZY_ACCEPT_THRESHOLD = 90
+FUZZY_REJECT_THRESHOLD = 50
+EMBEDDING_SIMILARITY_THRESHOLD = 0.80
 
 # Relationship configs
 SIMILARITY_THRESHOLD = 0.7
