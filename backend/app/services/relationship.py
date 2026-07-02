@@ -3,10 +3,9 @@ import asyncio
 from transformers import pipeline as hf_pipeline
 
 from app.db.operations import (
-    get_similar_concepts,
+    get_similar_concepts_by_concept_id,
     create_relation,
-    get_all_relation_types,
-    get_relation_type_by_name
+    get_all_relation_types
 )
 
 ### Set up configs and logger
@@ -104,7 +103,7 @@ def generate_relationships(db, concepts: list, user_id: int):
         try:
             # For each concept get their similar concepts
             logger.info(f"Finding similar concepts for '{concept.get("name", "")}'")
-            similar_concepts = get_similar_concepts(
+            similar_concepts = get_similar_concepts_by_concept_id(
                 db=db,
                 user_id=user_id,
                 concept_id=concept["id"],
@@ -152,7 +151,7 @@ def generate_relationships(db, concepts: list, user_id: int):
         "concepts_processed": len(concepts),
         "relationships_created": seen_pairs,
         "failed_concept_ids": failed,
-        "time taken": round(time.time() - start)
+        "time_taken": round(time.time() - start)
     }
     logger.info(f"Relationship generation complete: {summary}")
     return summary

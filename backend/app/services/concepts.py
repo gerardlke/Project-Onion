@@ -28,7 +28,7 @@ async def extract_concepts(chunk: str):
     """
     prompt = CONCEPT_EXTRACTION_PROMPT.format(chunk_text=chunk)
 
-    raw = await generate(prompt, max_new_tokens=1000, temperature=0.0)
+    raw = await generate(prompt=prompt, max_new_tokens=1000, temperature=0.0)
 
     # Strip markdown fences
     raw = re.sub(r"^```(?:json)?\s*", "", raw)

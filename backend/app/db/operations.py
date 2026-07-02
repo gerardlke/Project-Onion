@@ -331,8 +331,8 @@ def get_concepts_by_names(db: Session, concepts: list[str]):
     """
     return execute_select(db, query, {"concepts": concepts})
 
-def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, threshold: float = 0.5, limit: int = 10):
-    """Database operation to do similarity search on embeddings 
+def get_similar_concepts_by_concept_id(db: Session, user_id: int, concept_id: int, embedding, threshold: float = 0.5, limit: int = 10):
+    """Database operation to do similarity search on embeddings based on a stored concept
 
     Input:
 
@@ -360,6 +360,37 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
         "user_id": user_id,
         "concept_id": concept_id,
         "distance_threshold": threshold,
+        "limit": limit
+    }
+    return execute_select(db, query, params)
+
+def search_concepts_by_embedding(db: Session, user_id: int, query_embedding: list[float], limit: int = 5, distance_threshold: float = 0.6):
+    """Database operation to retrieve concepts semantically similar to a query embedding
+    
+    Input:
+    
+    Output:
+    """
+    query = """
+        WITH ranked AS (
+            SELECT
+                id,
+                name,
+                raw_text,
+                embedding <=> :query_embedding AS distance
+            FROM concepts
+            WHERE user_id = :user_id
+        )
+        SELECT id, name, raw_text, distance
+        FROM ranked
+        WHERE distance <= :distance_threshold
+        ORDER BY distance ASC
+        LIMIT :limit
+    """
+    params = {
+        "query_embedding": query_embedding,
+        "user_id": user_id,
+        "distance_threshold": distance_threshold,
         "limit": limit
     }
     return execute_select(db, query, params)

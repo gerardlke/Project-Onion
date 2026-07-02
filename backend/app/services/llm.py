@@ -48,7 +48,41 @@ async def llm_warm_up():
     logger.info("LLM warm-up complete")
 
 
-async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float = 0.0):
+def _generate_sync(
+    messages: list[dict],    # CHANGED: accepts full message list, not prompt string
+    max_new_tokens: int,
+    temperature: float
+) -> str:
+    """Synchronous generation from a message list. Runs in _model_executor."""
+    logger.info("Generation started")
+    model, tokenizer = _load_model_sync()
+
+    # apply_chat_template handles the full message list including system prompt
+    # and multi-turn history — this is unchanged from before
+    encoded = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        return_tensors="pt",
+    )
+    input_ids = encoded.input_ids if hasattr(encoded, "input_ids") else encoded
+    input_ids = input_ids.to(model.device)
+
+    output_ids = model.generate(
+        input_ids,
+        max_new_tokens=max_new_tokens,
+        do_sample=(temperature > 0.0),
+        temperature=temperature if temperature > 0.0 else None,
+        pad_token_id=tokenizer.eos_token_id,
+        attention_mask=torch.ones_like(input_ids)
+    )
+
+    new_tokens = output_ids[0][input_ids.shape[-1]:]
+    result = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+    logger.info("Generation complete")
+    return result
+
+
+async def generate(prompt: str = None, messages: list[dict] = None, max_new_tokens: int = 1000, temperature: float = 0.0):
     """Generate a completion for a single user prompt.
 
     Input:
@@ -58,9 +92,13 @@ async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float =
 
     Output: Decoded string completion (model's reply only, prompt stripped out)
     """
-    model, tokenizer = await _get_model_and_tokenizer()
+    if prompt is None and messages is None:
+        raise ValueError("Either prompt or messages must be passed into LLM")
+     
+    if messages is None:
+        messages = [{"role": "user", "content": prompt}]
 
-    messages = [{"role": "user", "content": prompt}]
+    model, tokenizer = await _get_model_and_tokenizer()
 
     # Apply the model's own chat template
     encoded = tokenizer.apply_chat_template(
