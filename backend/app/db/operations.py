@@ -352,7 +352,7 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
         SELECT id, name, raw_text, distance
         FROM calculated_distances
         WHERE distance <= :distance_threshold
-        ORDER BY distance DESC
+        ORDER BY distance ASC
         LIMIT :limit
     """
     params = {
