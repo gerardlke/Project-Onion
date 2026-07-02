@@ -5,6 +5,7 @@ from sqlalchemy import (
     Float,
     Text,
     ForeignKey,
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -27,8 +28,8 @@ class Users(Base):
     password_hash = Column(String, nullable=False)
 
     # Table relationships 
-    documents = relationship(
-        "Documents",
+    topics = relationship(
+        "Topics",
         back_populates="users",
         cascade="all, delete"
     )
@@ -43,13 +44,21 @@ class Topics(Base):
 
     # Metadata
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Topic information
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     description = Column(String)
     
     # Table relations
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="topics_user_name_unique"),
+    )
+
+    users = relationship(
+        "Users",
+        back_populates="topics"
+    )
     documents = relationship(
         "Documents",
         back_populates="topics",
@@ -60,49 +69,62 @@ class Topics(Base):
 class Documents(Base):
     """
     Schema for Documents table in db, 
-    one-to-many relationship with Concepts
+    many-to-one relationship with Topics
+    many-to-many relationship with Concepts
     """
     __tablename__ = "documents"
 
     # Metadata
     id = Column(Integer, primary_key=True)
-    topic_id = Column(Integer, ForeignKey("topics.id"))
+    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=False)
 
     # Document information
     filename = Column(String, nullable=False)
     content_type = Column(String)
     raw_text = Column(Text)
 
-    # Table relationships 
-    users = relationship(
-        "Users",
-        back_populates="documents"
-    )
-
+    # Table relationships
     topics = relationship(
         "Topics",
         back_populates="documents"
     )
 
     concepts = relationship(
-        "Concepts",
+        "Concepts", 
+        secondary="documents_to_concepts",
         back_populates="documents",
-        cascade="all, delete"
+    )
+
+
+class Documents_To_Concepts(Base):
+    """
+    Schema for Documents to Concepts junction table in db, 
+    one-to-many relationship with Documents,
+    one-to-many relationship with Concepts
+    """
+    __tablename__ = "documents_to_concepts"
+
+    # Metadata
+    document_id = Column(
+        Integer, ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
+    )
+    concept_id  = Column(
+        Integer, ForeignKey("concepts.id", ondelete="CASCADE"), primary_key=True
     )
 
 
 class Concepts(Base):
     """
     Schema for Concepts table in db, 
-    many-to-one relationship with Documents
+    many-to-many relationship with Documents
     one-to-many relationship with Relations
     """
     __tablename__ = "concepts"
 
     # Metadata
     id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey("documents.id"))
     chunk_index = Column(Integer)
+    user_id   = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Concept information
     name = Column(String, nullable=False)
@@ -110,14 +132,30 @@ class Concepts(Base):
     embedding = Column(Vector(384), nullable=False)
 
     # Table relationships 
-    documents = relationship(
-        "Documents",
-        back_populates="concepts"
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="concepts_user_name_unique"),
     )
 
-    relations = relationship(
-        "Relations",
+    user = relationship(
+        "Users",
+        back_populates="concepts"
+    )
+    documents = relationship(
+        "Documents",
+        secondary="documents_to_concepts",
         back_populates="concepts",
+    )
+
+    outgoing_relations = relationship(
+        "Relations", 
+        foreign_keys="[Relations.source_id]", 
+        back_populates="source_concept",
+        cascade="all, delete"
+    )
+    incoming_relations = relationship(
+        "Relations", 
+        foreign_keys="[Relations.target_id]", 
+        back_populates="target_concept",
         cascade="all, delete"
     )
 
@@ -142,14 +180,17 @@ class Relations(Base):
     explanation = Column(String)
 
     # Table relationships 
-    source_concepts = relationship(
+    source_concept = relationship(
         "Concepts",
         foreign_keys=[source_id]
     )
-
-    target_concepts = relationship(
+    target_concept = relationship(
         "Concepts",
         foreign_keys=[target_id]
+    )
+    relation_type = relationship(
+        "RelationTypes",
+        back_populates="relations"
     )
 
 
@@ -169,6 +210,6 @@ class RelationTypes(Base):
     # Table relationships 
     relations = relationship(
         "Relations",
-        back_populates="relation_types",
+        back_populates="relation_type",
         cascade="all, delete"
     )

@@ -35,9 +35,10 @@ def execute_batch_insert(db: Session, query_str: str, params_list: list):
     if not params_list:
         return []
     try:
-        result = db.execute(text(f"{query_str}"), params_list)
+        result = db.execute(text(query_str), params_list)
+        rows = [dict(row) for row in result.mappings().all()]
         db.commit()
-        return []
+        return rows
     except Exception as e:
         db.rollback()
         logger.error(f"Batch insert failed: {e}")
@@ -55,6 +56,22 @@ def execute_select(db: Session, query_str: str, params: dict={}):
     except Exception as e:
         db.rollback()
         logger.error(f"Select failed: {e}")
+        raise
+
+def execute_update(db: Session, query_str: str, params: dict = {}):
+    """Helper function to update an entry in the db then return refreshed entry
+
+    Input:
+
+    Output:
+    """
+    try:
+        result = db.execute(text(f"{query_str} RETURNING *"), params)
+        db.commit()
+        return result.mappings().first()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Insert failed: {e}")
         raise
 
 ### Administrative queries ============================
@@ -216,6 +233,20 @@ def create_document(db: Session, topic_id: int, filename: str, content_type: str
     return execute_insert(db, query, params)
 
 
+### Documents to Concepts queries =====================
+
+def create_concept_to_document(db: Session, concept_id: int, document_id: int):
+    """Record that a concept was sourced from a document
+    """
+    query = """
+        INSERT INTO documents_to_concepts (concept_id, document_id)
+        VALUES (:concept_id, :document_id)
+        ON CONFLICT DO NOTHING
+    """
+    params = {"concept_id": concept_id, "document_id": document_id}
+    return execute_insert(db, query, params)
+
+
 ### Concepts queries ==================================
 
 def create_batch_concept(db: Session, batch_concepts: list):
@@ -225,11 +256,25 @@ def create_batch_concept(db: Session, batch_concepts: list):
 
     Ouput:
     """
-    query = """
-        INSERT INTO concepts (document_id, name, raw_text, embedding) 
-        VALUES (:document_id, :name, :raw_text, :embedding)
+    if not batch_concepts:
+        return []
+    
+    columns = ["user_id", "name", "raw_text", "embedding"]
+    values, params = [], {}
+    for i, concept in enumerate(batch_concepts):
+        placeholders = ", ".join(f":{col}_{i}" for col in columns)
+        values.append(f"({placeholders})")
+        for col in columns:
+            params[f"{col}_{i}"] = concept[col]
+
+    query = f"""
+        INSERT INTO concepts (user_id, name, raw_text, embedding) 
+        VALUES ({", ".join(values)})
+        ON CONFLICT (user_id, name) DO UPDATE
+            SET raw_text = concepts.raw_text || '. ' || EXCLUDED.raw_text
+        RETURNING *, (xmax != 0) AS updated
     """
-    return execute_batch_insert(db, query, batch_concepts)
+    return execute_batch_insert(db, query, params)
 
 def get_all_concepts(db: Session):
     """Database operation to get all unique concepts from Concept table
@@ -252,11 +297,9 @@ def get_all_concepts_by_user_id(db: Session, user_id: int):
     Ouput:
     """
     query = """
-        SELECT concepts.id AS id, concepts.document_id AS document_id, concepts.embedding AS embedding
+        SELECT id, user_id, name, raw_text, embedding
         FROM concepts
-        INNER JOIN documents ON documents.id = concepts.document_id
-        INNER JOIN topics ON topics.id = documents.topic_id
-        WHERE topics.user_id = :user_id
+        WHERE user_id = :user_id
     """
     return execute_select(db, query, {"user_id": user_id})
 
@@ -298,16 +341,13 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
     query = """
         WITH calculated_distances AS (
             SELECT
-                concepts.id AS id,
-                concepts.name AS name,
-                concepts.raw_text as raw_text,
+                id,
+                name,
+                raw_text,
                 embedding <=> :embedding AS distance
             FROM concepts
-            JOIN documents ON concepts.document_id = documents.id
-            JOIN topics ON documents.topic_id = topics.id
-            JOIN users ON topics.user_id = users.id
-            WHERE users.id = :user_id
-                AND concepts.id != :concept_id
+            WHERE user_id = :user_id
+                AND id != :concept_id
         )
         SELECT id, name, raw_text, distance
         FROM calculated_distances
@@ -324,6 +364,23 @@ def get_similar_concepts(db: Session, user_id: int, concept_id: int, embedding, 
     }
     return execute_select(db, query, params)
 
+def update_concept_embedding(db: Session, concept_id: int, embedding: list):
+    """Update the embedding for a concept after its raw_text was merged
+
+    Input:
+        - concept_id:   id of the concept to update
+        - embedding:    newly generated embedding vector
+
+    Output: updated concept row
+    """
+    query = """
+        UPDATE concepts
+        SET embedding = :embedding
+        WHERE id = :concept_id
+    """
+    params = {"concept_id": concept_id, "embedding": embedding}
+    return execute_update(db, query, params)
+        
 
 ### Relations queries =======================
 
@@ -355,31 +412,17 @@ def get_all_relations_by_user_id(db: Session, user_id: int):
     Ouput:
     """
     query = """
-        SELECT 
+        SELECT DISTINCT
             relations.id AS relation_id,
-            relations.source_id AS source_id,
-            relations.target_id AS target_id,
-            relation_types.name AS name
+            relations.source_id,
+            relations.target_id,
+            rt.name
         FROM relations
-        INNER JOIN relation_types ON relations.relation_type_id = relation_types.id
-        INNER JOIN concepts ON relations.source_id = concepts.id
-        INNER JOIN documents ON concepts.document_id = documents.id
-        INNER JOIN topics ON documents.topic_id = topics.id
-        WHERE topics.user_id = :user_id
-
-        UNION
-
-        SELECT 
-            relations.id AS relation_id,
-            relations.source_id AS source_id,
-            relations.target_id AS target_id,
-            relation_types.name AS name
-        FROM relations
-        INNER JOIN relation_types ON relations.relation_type_id = relation_types.id
-        INNER JOIN concepts ON relations.target_id = concepts.id
-        INNER JOIN documents ON concepts.document_id = documents.id
-        INNER JOIN topics ON documents.topic_id = topics.id
-        WHERE topics.user_id = :user_id
+        JOIN relation_types rt ON relations.relation_type_id = rt.id
+        JOIN concepts sc ON relations.source_id = sc.id
+        JOIN concepts tc ON relations.target_id = tc.id
+        WHERE sc.user_id = :user_id
+           OR tc.user_id = :user_id
     """
     return execute_select(db, query, {"user_id": user_id})
 

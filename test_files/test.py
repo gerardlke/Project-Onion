@@ -27,5 +27,3 @@ if __name__ == '__main__':
             "Black White Trees": {"name": "Tree rotation"}
         }
     )
-
-git commit -m "updated logging in model files (encoder, llm, nli) + improved
