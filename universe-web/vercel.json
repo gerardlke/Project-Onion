@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/user/:path*",
+      "destination": "https://your-backend-url.railway.app/user/:path*"
+    },
+    {
+      "source": "/upload/:path*",
+      "destination": "https://your-backend-url.railway.app/upload/:path*"
+    },
+    {
+      "source": "/universe/:path*",
+      "destination": "https://your-backend-url.railway.app/universe/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
