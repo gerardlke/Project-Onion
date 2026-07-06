@@ -1,4 +1,5 @@
 import time
+import asyncio
 from pathlib import Path
 from sqlalchemy.orm import Session
 from fastapi import (
@@ -10,14 +11,15 @@ from fastapi import (
     File, 
     Depends
 )
+from fastapi.responses import StreamingResponse
 
 from app.logging import setup_logger
 from app.schemas.user import UserResponse as User
 from app.schemas.upload import (
-    UploadResponse,
     NewTopicResponse,
     GetTopicResponse
 )
+from app.services.progress import ProgressTracker
 from app.db.session import get_db
 from app.db.operations import (
     create_topic,
@@ -88,7 +90,7 @@ async def get_all_topics(
     try:
         all_topics = get_all_topics_by_user_id(
             db=db,
-            user_id=user.id
+            user_id=user["id"]
         )
         logger.info(f"Retrieved {len(all_topics)} topic(s)")
 
@@ -114,7 +116,7 @@ async def get_all_topics(
         )
 
 
-@router.post("/new_document", response_model=UploadResponse)
+@router.post("/new_document")
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -122,60 +124,57 @@ async def upload_document(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """API Route for uploading new document
+    """API Route for uploading new document and streams progress via SSE
 
     Input:
 
     Ouput:
     """
-    try:
-        logger.info(f"Upload request received for {file.filename}")
-        logger.info("Starting file validation")
+    # Validate extension
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type: {file_extension} - Supported types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
+        )
+
+    # Run pipeline
+    logger.info(f"Upload request received for {file.filename}")
+    tracker = ProgressTracker()
+
+    async def run_and_stream():
+        """Run pipeline concurrently with streaming progress updates"""
         start = time.time()
 
-        # Validate extension
-        file_extension = Path(file.filename).suffix.lower()
-        if file_extension not in SUPPORTED_EXTENSIONS:
-            raise HTTPException(
-                status_code=415,
-                detail=f"Unsupported file type: {file_extension} - Supported types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
+        pipeline_task = asyncio.create_task(
+            process_document(
+                db=db,
+                user=user,
+                file=file,
+                topic_name=topic_name,
+                background_tasks=background_tasks,
+                tracker=tracker,
             )
-
-        # Run pipeline
-        logger.info("Starting file processing") 
-        metadata = await process_document(
-            db=db,
-            user=user,
-            file=file,
-            topic_name=topic_name,
-            background_tasks=background_tasks
         )
 
-        logger.info(f"Finished file upload in {round(time.time() - start)}s")
+        # Stream SSE messages as pipeline posts them to tracker queue
+        async for event in tracker.stream():
+            yield event
 
-        # Response model
-        return UploadResponse(
-            success=True,
-            topic=topic_name,
-            filename=file.filename,
-            content_type=file.content_type,
-            size_mb=file.size,
-            document_id=metadata.get("id", -1),
-            num_chunks=metadata.get("num_chunks", -1),
-            concepts=metadata.get("concepts", [])
-        )
+        # Ensure pipeline exception surfaces
+        try:
+            await pipeline_task
+        except Exception as e:
+            logger.exception(f"Pipeline task failed for {file.filename}: {e}")
 
-    except HTTPException as http_error:
-        logger.warning(
-            f"HTTP error: {http_error.detail}"
-        )
-        raise http_error
+        logger.info(f"Upload stream complete in {round(time.time() - start)}s")
 
-    except Exception as error:
-        logger.exception(
-            f"Unexpected error while processing {file.filename} due to {error}"
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Internal server error"
-        )
+    return StreamingResponse(
+        run_and_stream(),
+        media_type="text/event-stream",
+        headers={
+            "X-Accel-Buffering": "no",  # Prevent Nginx/proxy buffering
+            "Cache-Control": "no-cache",
+            "Access-Control-Allow-Origin": "*",  # Required for CORS
+        }
+    )
