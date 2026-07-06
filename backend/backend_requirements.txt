@@ -46,9 +46,11 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.20.0
 PyJWT==2.13.0
+pymupdf==1.28.0
 python-docx==1.2.0
 python-dotenv==1.2.2
 python-multipart==0.0.29
+python-pptx==1.0.2
 PyYAML==6.0.3
 RapidFuzz==3.14.5
 regex==2026.5.9
@@ -79,5 +81,6 @@ urllib3==2.7.0
 uuid_utils==0.16.1
 uvicorn==0.47.0
 websockets==16.0
+xlsxwriter==3.2.9
 xxhash==3.7.0
 zstandard==0.25.0
