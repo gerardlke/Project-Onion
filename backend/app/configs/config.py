@@ -1,6 +1,6 @@
 # Upload configs
-ALLOWED_FILE_TYPES=[".txt", ".docx"]
-MAX_FILE_SIZE_MB=500
+SUPPORTED_EXTENSIONS={"txt", "md", "docx", "pdf", "pptx"}
+MAX_FILE_SIZE_MB=50
 
 # Model configs
 ENCODER = "all-MiniLM-L6-v2"
