@@ -5,10 +5,7 @@ from fastapi import UploadFile
 from io import BytesIO
 
 ### Set up configs
-from app.configs.config import (
-    SUPPORTED_EXTENSIONS,
-    MAX_FILE_SIZE_MB
-)
+from app.configs.config import MAX_FILE_SIZE_MB
 
 ### Set up logger
 from app.logging import setup_logger
@@ -23,10 +20,6 @@ async def extract_text(file: UploadFile):
     Output: raw text string for downstream chunking and concept extraction
     """
     extension = file.filename.split(".")[-1].lower()
-
-    if extension not in SUPPORTED_EXTENSIONS:
-        raise ValueError(f"Unsupported file type: .{extension}. Supported types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}")
-
     contents = await file.read()
 
     if len(contents) > MAX_FILE_SIZE_MB * 1024 * 1024:

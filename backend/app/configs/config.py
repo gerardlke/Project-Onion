@@ -1,5 +1,5 @@
 # Upload configs
-SUPPORTED_EXTENSIONS={"txt", "md", "docx", "pdf", "pptx"}
+SUPPORTED_EXTENSIONS={".txt", ".md", ".docx", ".pdf", ".pptx"}
 MAX_FILE_SIZE_MB=50
 
 # Model configs

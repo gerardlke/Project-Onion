@@ -26,13 +26,8 @@ from app.db.operations import (
 from app.pipelines.authentication_pipeline import get_current_user
 from app.pipelines.upload_pipeline import process_document
 
-
 ### Set up configs
-from app.configs.config import (
-    ALLOWED_FILE_TYPES,
-    MAX_FILE_SIZE_MB,
-)
-
+from app.configs.config import SUPPORTED_EXTENSIONS
 
 ### Set up API and logger
 logger = setup_logger(__name__)
@@ -140,17 +135,10 @@ async def upload_document(
 
         # Validate extension
         file_extension = Path(file.filename).suffix.lower()
-        if file_extension not in ALLOWED_FILE_TYPES:
+        if file_extension not in SUPPORTED_EXTENSIONS:
             raise HTTPException(
                 status_code=415,
-                detail=f"Unsupported file type: {file_extension}"
-            )
-
-        # Validate size (without reading into memory)
-        if file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
-            raise HTTPException(
-                status_code=413,
-                detail=f"File exceeds {MAX_FILE_SIZE_MB}MB limit"
+                detail=f"Unsupported file type: {file_extension} - Supported types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
             )
 
         # Run pipeline
