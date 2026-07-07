@@ -4,7 +4,6 @@ from sklearn.decomposition import PCA
 
 ### Set up configs
 from app.configs.config import (
-    LOCAL_DEPLOYMENT,
     ENCODER
 )
 
@@ -16,6 +15,7 @@ _encoder = None
 
 async def _get_encoder():
     """Lazily load encoder on first call, then reuse"""
+    global _encoder
     if _encoder is not None:
         return _encoder
     
