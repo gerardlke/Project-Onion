@@ -10,7 +10,8 @@ from app.db.operations import (
 ### Set up configs and logger
 from app.configs.config import (
     SIMILARITY_THRESHOLD,
-    RELATIONSHIP_LIMIT
+    RELATIONSHIP_LIMIT,
+    NLI_MODEL
 )
 from app.logging import setup_logger
 logger = setup_logger(__name__)
@@ -26,7 +27,7 @@ def _get_nli():
         logger.info("Loading NLI classifier - first call only")
         _nli = hf_pipeline(
             "zero-shot-classification",
-            model="cross-encoder/nli-deberta-v3-small"
+            model=NLI_MODEL
         )
         logger.info("NLI classifier loaded")
     return _nli

@@ -8,6 +8,7 @@ from app.db.database import (
     Base
 )
 from app.db.seed import seed_relation_types
+import app.db.models  # noqa: F401
 from app.routes import (
     admin,
     upload,

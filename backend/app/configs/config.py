@@ -3,8 +3,10 @@ ALLOWED_FILE_TYPES=[".txt", ".docx"]
 MAX_FILE_SIZE_MB=500
 
 # Model configs
+LOCAL_DEPLOYMENT = True
 ENCODER = "all-MiniLM-L6-v2"
 MINI_LLM = "gpt-4o-mini"
+NLI_MODEL = "cross-encoder/nli-deberta-v3-small"
 
 # Relationship configs
 SIMILARITY_THRESHOLD = 0.7
