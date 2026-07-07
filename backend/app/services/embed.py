@@ -3,7 +3,10 @@ from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import PCA
 
 ### Set up configs
-from app.configs.config import ENCODER
+from app.configs.config import (
+    LOCAL_DEPLOYMENT,
+    ENCODER
+)
 
 ### Set up logger for model logs
 from app.logging import setup_logger

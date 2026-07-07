@@ -1,16 +1,31 @@
-import asyncio
-import torch
+import os
 import time
+import torch
+import asyncio
+from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from openai import AsyncOpenAI
 
 ### Set up configs
-from app.configs.config import LLM
+from app.configs.config import (
+    LOCAL_DEPLOYMENT, 
+    LOCAL_LLM,
+    API_LLM
+)
+load_dotenv()
 
 ### Set up logger
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 
 
+# Groq API 
+groq_client = AsyncOpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
+
+# Local model state
 _model = None
 _tokenizer = None
 _load_lock = asyncio.Lock()
@@ -27,63 +42,66 @@ async def _get_model_and_tokenizer():
         if _model is not None:
             return _model, _tokenizer
 
-        logger.info(f"Loading local model '{LLM}'")
+        logger.info(f"Loading local model '{LOCAL_LLM}'")
 
-        _tokenizer = AutoTokenizer.from_pretrained(LLM)
+        _tokenizer = AutoTokenizer.from_pretrained(LOCAL_LLM)
         _model = AutoModelForCausalLM.from_pretrained(
-            LLM,
+            LOCAL_LLM,
             torch_dtype=torch.float32,
             device_map="auto",  # picks GPU if available, else CPU
         )
 
         logger.info("Local model loaded")
-
     return _model, _tokenizer
 
 
 async def llm_warm_up():
     """Pre-load the LLM into memory during application startup before first call"""
-    logger.info("Warming up LLM...")
-    await _get_model_and_tokenizer()
-    logger.info("LLM warm-up complete")
+    if LOCAL_DEPLOYMENT:
+        logger.info("Warming up local LLM...")
+        await _get_model_and_tokenizer()
+    else:
+        logger.info("Using LLM API. No warm up needed.")
 
 
-def _generate_sync(
-    messages: list[dict],    # CHANGED: accepts full message list, not prompt string
-    max_new_tokens: int,
-    temperature: float
-) -> str:
-    """Synchronous generation from a message list. Runs in _model_executor."""
-    logger.info("Generation started")
-    model, tokenizer = _load_model_sync()
+async def local_generate(messages, max_new_tokens, temperature):
+    """Generates llm response using locally deployed llm"""
+    try:
+        model, tokenizer = await _get_model_and_tokenizer()
+        encoded = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(model.device)
+        
+        def sync_generate():
+            output = model.generate(
+                encoded, max_new_tokens=max_new_tokens, do_sample=(temperature > 0.0),
+                temperature=temperature if temperature > 0.0 else None,
+                pad_token_id=tokenizer.eos_token_id
+            )
+            return output[0][encoded.shape[-1]:]
 
-    # apply_chat_template handles the full message list including system prompt
-    # and multi-turn history — this is unchanged from before
-    encoded = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        return_tensors="pt",
-    )
-    input_ids = encoded.input_ids if hasattr(encoded, "input_ids") else encoded
-    input_ids = input_ids.to(model.device)
+        output_tokens = await asyncio.to_thread(sync_generate)
+        return tokenizer.decode(output_tokens, skip_special_tokens=True).strip()
+    except Exception as e:
+        logger.error(f"Local llm error: {e}")
+        return "Error generatoing response via local LLM."
 
-    output_ids = model.generate(
-        input_ids,
-        max_new_tokens=max_new_tokens,
-        do_sample=(temperature > 0.0),
-        temperature=temperature if temperature > 0.0 else None,
-        pad_token_id=tokenizer.eos_token_id,
-        attention_mask=torch.ones_like(input_ids)
-    )
 
-    new_tokens = output_ids[0][input_ids.shape[-1]:]
-    result = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
-    logger.info("Generation complete")
-    return result
+async def api_generate(messages, max_new_tokens, temperature):
+    """Generates llm response using llm api"""
+    try:
+        response = await groq_client.chat.completions.create(
+            model=API_LLM,
+            messages=messages,
+            max_tokens=max_new_tokens,
+            temperature=temperature
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Groq API Error: {e}")
+        return "Error generating response via API."
 
 
 async def generate(prompt: str = None, messages: list[dict] = None, max_new_tokens: int = 1000, temperature: float = 0.0):
-    """Generate a completion for a single user prompt.
+    """Generate a completion for a single user prompt either via local LLM or API
 
     Input:
     - prompt:           The full prompt text (already formatted, e.g. via CONCEPT_EXTRACTION_PROMPT.format(...))
@@ -97,36 +115,12 @@ async def generate(prompt: str = None, messages: list[dict] = None, max_new_toke
      
     if messages is None:
         messages = [{"role": "user", "content": prompt}]
+    
+    start = time.time()
 
-    model, tokenizer = await _get_model_and_tokenizer()
+    if LOCAL_DEPLOYMENT:
+        res = local_generate(messages, max_new_tokens, temperature)
+    res = api_generate(messages, max_new_tokens, temperature)
 
-    # Apply the model's own chat template
-    encoded = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        return_tensors="pt",
-    )
-    input_ids = encoded.input_ids if hasattr(encoded, "input_ids") else encoded
-    input_ids = input_ids.to(model.device)
-
-    # blocking, synchronous, CPU/GPU-bound call -> wrap generation call in a nested function
-    def sync_generate():
-        start = time.time()
-        res = model.generate(
-            input_ids,  # Pass positionally
-            max_new_tokens=max_new_tokens,
-            do_sample=(temperature > 0.0),
-            temperature=temperature if temperature > 0.0 else None,
-            pad_token_id=tokenizer.eos_token_id,
-            attention_mask=torch.ones_like(input_ids)
-        )
-        logger.info(f"Time taken for LLM generation: {round(time.time() - start)}s")
-        return res
-
-    # Offload wrapper to thread
-    output_ids = await asyncio.to_thread(sync_generate)
-
-    new_tokens = output_ids[0][input_ids.shape[-1]:]
-    completion = tokenizer.decode(new_tokens, skip_special_tokens=True)
-
-    return completion.strip()
+    logger.info(f"LLM generation completed in {round(time.time() - start)}s")
+    return res

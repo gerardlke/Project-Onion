@@ -5,7 +5,9 @@ MAX_FILE_SIZE_MB=50
 # Model configs
 LOCAL_DEPLOYMENT = True
 ENCODER = "all-MiniLM-L6-v2"
-LLM = "Qwen/Qwen2.5-1.5B-Instruct"
+LOCAL_LLM = "Qwen/Qwen2.5-1.5B-Instruct"
+API_LLM = "llama-3.1-8b-instant"
+LOCAL_NLI = "cross-encoder/nli-deberta-v3-small"
 
 # Concept aggregation configs
 FUZZY_ACCEPT_THRESHOLD = 90

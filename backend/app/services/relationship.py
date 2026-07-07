@@ -1,5 +1,8 @@
+import os
 import time
 import asyncio
+import requests
+from dotenv import load_dotenv
 from transformers import pipeline as hf_pipeline
 
 from app.db.operations import (
@@ -13,13 +16,18 @@ from app.configs.config import (
     SIMILARITY_THRESHOLD,
     RELATIONSHIP_LIMIT,
     CONFIDENCE_THRESHOLD,
-    NLI_MODEL
+    LOCAL_DEPLOYMENT,
+    LOCAL_NLI
 )
 from app.logging import setup_logger
 logger = setup_logger(__name__)
+load_dotenv()
 
+# API NLI model
+HF_API_URL = f"https://api-inference.huggingface.co/models/{LOCAL_NLI}"
+HEADERS = {"Authorization": f"Bearer {os.getenv('HF_TOKEN')}"}
 
-# Lazy singleton instead of loading at module import time and defers cost to first actual use
+# Local NLI model
 _nli = None
 
 def _get_nli():
@@ -29,7 +37,7 @@ def _get_nli():
         logger.info("Loading NLI classifier - first call only")
         _nli = hf_pipeline(
             "zero-shot-classification",
-            model=NLI_MODEL
+            model=LOCAL_NLI
         )
         logger.info("NLI classifier loaded")
     return _nli
@@ -42,8 +50,8 @@ async def nli_warm_up():
     logger.info("NLI model warm-up complete")
 
 
-def classify_relation(source: dict, target: dict, type_lookup: dict):
-    """Classify the relationship between two concepts using zero-shot NLI.
+def local_classify_relation(source: dict, target: dict, type_lookup: dict):
+    """Classify the relationship between two concepts using a local zero-shot NLI model
 
     Input:
         source:      concept dict with keys: name, raw_text
@@ -68,9 +76,37 @@ def classify_relation(source: dict, target: dict, type_lookup: dict):
 
     top_label = result["labels"][0]
     confidence = result["scores"][0]
-
     relation_type = type_lookup.get(top_label)
 
+    logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {relation_type["name"]} ({confidence * 100:.2f}%)")
+
+    return relation_type["id"], confidence
+
+
+def api_classify_relation(source: dict, target: dict, type_lookup: dict):
+    """Classify the relationship between two concepts using an NLI API
+
+    Input:
+        source:      concept dict with keys: name, raw_text
+        target:      concept dict with keys: name, raw_text
+        type_lookup: dict mapping type name
+
+    Output:
+        (relation_type dict from DB, confidence float)
+    """
+    sequence = (
+        f"'{source.get('name', '')}': {source.get('raw_text', '')} "
+        f"and '{target.get('name', '')}': {target.get('raw_text', '')}"
+    )
+    payload = {"inputs": sequence, "parameters": {"candidate_labels": list(type_lookup.keys())}}
+    response = requests.post(HF_API_URL, headers=HEADERS, json=payload)
+
+    result = response.json()
+    
+    top_label = result["labels"][0]
+    confidence = result["scores"][0]
+    relation_type = type_lookup.get(top_label)
+    
     logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {relation_type["name"]} ({confidence * 100:.2f}%)")
 
     return relation_type["id"], confidence
@@ -121,11 +157,18 @@ def generate_relationships(db, concepts: list, user_id: int):
                 if pair in seen_pairs:
                     continue
                 
-                relation_type_id, confidence = classify_relation(
-                    source=concept, 
-                    target=neighbour, 
-                    type_lookup=type_lookup
-                )
+                if LOCAL_DEPLOYMENT:
+                    relation_type_id, confidence = local_classify_relation(
+                        source=concept, 
+                        target=neighbour, 
+                        type_lookup=type_lookup
+                    )
+                else:
+                    relation_type_id, confidence = api_classify_relation(
+                        source=concept, 
+                        target=neighbour, 
+                        type_lookup=type_lookup
+                    )
 
                 if relation_type_id is None or confidence < CONFIDENCE_THRESHOLD:
                     logger.warning(f"No relation type resolved for '{concept.get('name')}' and '{neighbour.get('name')}'. Skipping...")
