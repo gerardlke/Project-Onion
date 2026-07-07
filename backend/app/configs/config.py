@@ -3,7 +3,7 @@ SUPPORTED_EXTENSIONS={".txt", ".md", ".docx", ".pdf", ".pptx"}
 MAX_FILE_SIZE_MB=50
 
 # Model configs
-LOCAL_DEPLOYMENT = True
+LOCAL_DEPLOYMENT = False
 ENCODER = "all-MiniLM-L6-v2"
 LOCAL_LLM = "Qwen/Qwen2.5-1.5B-Instruct"
 API_LLM = "llama-3.1-8b-instant"
