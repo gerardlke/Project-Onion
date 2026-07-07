@@ -1,16 +1,18 @@
+import time
+import asyncio
 from transformers import pipeline as hf_pipeline
 
 from app.db.operations import (
-    get_similar_concepts,
+    get_similar_concepts_by_concept_id,
     create_relation,
-    get_all_relation_types,
-    get_relation_type_by_name
+    get_all_relation_types
 )
 
 ### Set up configs and logger
 from app.configs.config import (
     SIMILARITY_THRESHOLD,
     RELATIONSHIP_LIMIT,
+    CONFIDENCE_THRESHOLD,
     NLI_MODEL
 )
 from app.logging import setup_logger
@@ -31,6 +33,13 @@ def _get_nli():
         )
         logger.info("NLI classifier loaded")
     return _nli
+
+
+async def nli_warm_up():
+    """Pre-load the NLI model into memory during application startup before first call"""
+    logger.info("Warming up NLI model...")
+    await asyncio.to_thread(_get_nli)
+    logger.info("NLI model warm-up complete")
 
 
 def classify_relation(source: dict, target: dict, type_lookup: dict):
@@ -60,11 +69,11 @@ def classify_relation(source: dict, target: dict, type_lookup: dict):
     top_label = result["labels"][0]
     confidence = result["scores"][0]
 
-    matched_type = type_lookup.get(top_label)
+    relation_type = type_lookup.get(top_label)
 
-    logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {matched_type} ({confidence * 100:.2f}%)")
+    logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {relation_type["name"]} ({confidence * 100:.2f}%)")
 
-    return matched_type, confidence
+    return relation_type["id"], confidence
 
 
 def generate_relationships(db, concepts: list, user_id: int):
@@ -83,18 +92,19 @@ def generate_relationships(db, concepts: list, user_id: int):
         return {"concepts_processed": 0, "relationships_created": 0, "failed_concept_ids": []}
 
     type_lookup = {
-        r["description"]: r["name"]
+        r["description"]: r
         for r in relation_types
     }
 
-    total = 0
     failed = []
+    start = time.time()
+    seen_pairs = set()
 
     for concept in concepts:
         try:
             # For each concept get their similar concepts
             logger.info(f"Finding similar concepts for '{concept.get("name", "")}'")
-            similar_concepts = get_similar_concepts(
+            similar_concepts = get_similar_concepts_by_concept_id(
                 db=db,
                 user_id=user_id,
                 concept_id=concept["id"],
@@ -105,28 +115,33 @@ def generate_relationships(db, concepts: list, user_id: int):
 
             # For each similar concept, identify and create the type of relationship
             for neighbour in similar_concepts:
-                relation_type_name, confidence = classify_relation(
+
+                # Prevent duplicated relationships
+                pair = frozenset([concept["id"], neighbour["id"]])
+                if pair in seen_pairs:
+                    continue
+                
+                relation_type_id, confidence = classify_relation(
                     source=concept, 
                     target=neighbour, 
                     type_lookup=type_lookup
                 )
 
-                if relation_type_name is None or confidence < 0.5:
-                    logger.warning(f"No relation type resolved for '{concept.get('name')}' and '{neighbour.get('name')}' - skipping...")
+                if relation_type_id is None or confidence < CONFIDENCE_THRESHOLD:
+                    logger.warning(f"No relation type resolved for '{concept.get('name')}' and '{neighbour.get('name')}'. Skipping...")
                     continue
-
-                relation_type = get_relation_type_by_name(db, relation_type_name)[0]
                 
                 create_relation(
                     db=db,
                     source_id=concept["id"],
                     target_id=neighbour["id"],
-                    relation_type_id=relation_type["id"],
+                    relation_type_id=relation_type_id,
                     weight=round(1.0-neighbour["distance"], 3),
                     explanation=""
                 )
 
-            total += len(similar_concepts)
+                seen_pairs.add(pair)
+
             logger.info(f"{len(similar_concepts)} relation edges formed for '{concept.get("name", "")}")
 
         except Exception as e:
@@ -135,8 +150,9 @@ def generate_relationships(db, concepts: list, user_id: int):
         
     summary = {
         "concepts_processed": len(concepts),
-        "relationships_created": total,
-        "failed_concept_ids": failed
+        "relationships_created": seen_pairs,
+        "failed_concept_ids": failed,
+        "time_taken": round(time.time() - start)
     }
     logger.info(f"Relationship generation complete: {summary}")
     return summary

@@ -1,12 +1,15 @@
 import asyncio
 import torch
+import time
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from app.logging import setup_logger
+### Set up configs
+from app.configs.config import LLM
 
+### Set up logger
+from app.logging import setup_logger
 logger = setup_logger(__name__)
 
-MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
 
 _model = None
 _tokenizer = None
@@ -24,11 +27,11 @@ async def _get_model_and_tokenizer():
         if _model is not None:
             return _model, _tokenizer
 
-        logger.info(f"Loading local model '{MODEL_NAME}'")
+        logger.info(f"Loading local model '{LLM}'")
 
-        _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        _tokenizer = AutoTokenizer.from_pretrained(LLM)
         _model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            LLM,
             torch_dtype=torch.float32,
             device_map="auto",  # picks GPU if available, else CPU
         )
@@ -38,14 +41,48 @@ async def _get_model_and_tokenizer():
     return _model, _tokenizer
 
 
-async def warm_up():
+async def llm_warm_up():
     """Pre-load the LLM into memory during application startup before first call"""
     logger.info("Warming up LLM...")
     await _get_model_and_tokenizer()
     logger.info("LLM warm-up complete")
 
 
-async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float = 0.0):
+def _generate_sync(
+    messages: list[dict],    # CHANGED: accepts full message list, not prompt string
+    max_new_tokens: int,
+    temperature: float
+) -> str:
+    """Synchronous generation from a message list. Runs in _model_executor."""
+    logger.info("Generation started")
+    model, tokenizer = _load_model_sync()
+
+    # apply_chat_template handles the full message list including system prompt
+    # and multi-turn history — this is unchanged from before
+    encoded = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        return_tensors="pt",
+    )
+    input_ids = encoded.input_ids if hasattr(encoded, "input_ids") else encoded
+    input_ids = input_ids.to(model.device)
+
+    output_ids = model.generate(
+        input_ids,
+        max_new_tokens=max_new_tokens,
+        do_sample=(temperature > 0.0),
+        temperature=temperature if temperature > 0.0 else None,
+        pad_token_id=tokenizer.eos_token_id,
+        attention_mask=torch.ones_like(input_ids)
+    )
+
+    new_tokens = output_ids[0][input_ids.shape[-1]:]
+    result = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+    logger.info("Generation complete")
+    return result
+
+
+async def generate(prompt: str = None, messages: list[dict] = None, max_new_tokens: int = 1000, temperature: float = 0.0):
     """Generate a completion for a single user prompt.
 
     Input:
@@ -55,9 +92,13 @@ async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float =
 
     Output: Decoded string completion (model's reply only, prompt stripped out)
     """
-    model, tokenizer = await _get_model_and_tokenizer()
+    if prompt is None and messages is None:
+        raise ValueError("Either prompt or messages must be passed into LLM")
+     
+    if messages is None:
+        messages = [{"role": "user", "content": prompt}]
 
-    messages = [{"role": "user", "content": prompt}]
+    model, tokenizer = await _get_model_and_tokenizer()
 
     # Apply the model's own chat template
     encoded = tokenizer.apply_chat_template(
@@ -70,7 +111,8 @@ async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float =
 
     # blocking, synchronous, CPU/GPU-bound call -> wrap generation call in a nested function
     def sync_generate():
-        return model.generate(
+        start = time.time()
+        res = model.generate(
             input_ids,  # Pass positionally
             max_new_tokens=max_new_tokens,
             do_sample=(temperature > 0.0),
@@ -78,6 +120,8 @@ async def generate(prompt: str, max_new_tokens: int = 1000, temperature: float =
             pad_token_id=tokenizer.eos_token_id,
             attention_mask=torch.ones_like(input_ids)
         )
+        logger.info(f"Time taken for LLM generation: {round(time.time() - start)}s")
+        return res
 
     # Offload wrapper to thread
     output_ids = await asyncio.to_thread(sync_generate)

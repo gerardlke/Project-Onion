@@ -13,7 +13,8 @@ from app.routes import (
     admin,
     upload,
     universe,
-    user
+    user,
+    chat
 )
 
 # Warm up from llm and relationship service
@@ -117,4 +118,10 @@ app.include_router(
     user.router,
     prefix="/user",
     tags=["User"]
+)
+
+app.include_router(
+    chat.router,
+    prefix="/chat",
+    tags=["Chat"]
 )

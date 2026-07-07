@@ -2,8 +2,8 @@ import json
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
-    HTTPException,
-    Depends
+    Depends,
+    HTTPException
 )
 
 from app.logging import setup_logger
