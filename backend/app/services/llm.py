@@ -119,8 +119,9 @@ async def generate(prompt: str = None, messages: list[dict] = None, max_new_toke
     start = time.time()
 
     if LOCAL_DEPLOYMENT:
-        res = local_generate(messages, max_new_tokens, temperature)
-    res = api_generate(messages, max_new_tokens, temperature)
+        res = await local_generate(messages, max_new_tokens, temperature)
+    else:
+        res = await api_generate(messages, max_new_tokens, temperature)
 
     logger.info(f"LLM generation completed in {round(time.time() - start)}s")
     return res

@@ -17,14 +17,14 @@ from app.configs.config import (
     RELATIONSHIP_LIMIT,
     CONFIDENCE_THRESHOLD,
     LOCAL_DEPLOYMENT,
-    LOCAL_NLI
+    NLI_MODEL
 )
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 load_dotenv()
 
 # API NLI model
-HF_API_URL = f"https://api-inference.huggingface.co/models/{LOCAL_NLI}"
+HF_API_URL = f"https://api-inference.huggingface.co/models/{NLI_MODEL}"
 HEADERS = {"Authorization": f"Bearer {os.getenv('HF_TOKEN')}"}
 
 # Local NLI model
@@ -37,7 +37,7 @@ def _get_nli():
         logger.info("Loading NLI classifier - first call only")
         _nli = hf_pipeline(
             "zero-shot-classification",
-            model=LOCAL_NLI
+            model=NLI_MODEL
         )
         logger.info("NLI classifier loaded")
     return _nli
