@@ -102,10 +102,20 @@ def api_classify_relation(source: dict, target: dict, type_lookup: dict):
     response = requests.post(HF_API_URL, headers=HEADERS, json=payload)
 
     result = response.json()
+    if "error" in result:
+        logger.error(f"HF API error: {result['error']}")
+        fallback = next(
+            (r for r in type_lookup.values() if r["name"] == "SIMILAR"), None
+        )
+        return (fallback["id"] if fallback else None), 0.0
     
     top_label = result["labels"][0]
     confidence = result["scores"][0]
     relation_type = type_lookup.get(top_label)
+
+    if relation_type is None:
+        logger.warning(f"Unknown label from HF API: {top_label}")
+        return None, 0.0
     
     logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {relation_type["name"]} ({confidence * 100:.2f}%)")
 
@@ -193,7 +203,7 @@ def generate_relationships(db, concepts: list, user_id: int):
         
     summary = {
         "concepts_processed": len(concepts),
-        "relationships_created": seen_pairs,
+        "relationships_created": len(seen_pairs),
         "failed_concept_ids": failed,
         "time_taken": round(time.time() - start)
     }

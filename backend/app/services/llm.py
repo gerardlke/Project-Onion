@@ -72,7 +72,9 @@ async def local_generate(messages, max_new_tokens, temperature):
         
         def sync_generate():
             output = model.generate(
-                encoded, max_new_tokens=max_new_tokens, do_sample=(temperature > 0.0),
+                encoded,
+                max_new_tokens=max_new_tokens,
+                do_sample=(temperature > 0.0),
                 temperature=temperature if temperature > 0.0 else None,
                 pad_token_id=tokenizer.eos_token_id
             )
