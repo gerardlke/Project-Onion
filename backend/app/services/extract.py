@@ -65,7 +65,7 @@ def _extract_docx(contents: bytes):
 
 
 def _extract_pdf(contents: bytes):
-    """Extract text from a PDF using PyMuPDF (fitz)    """
+    """Extract text from a PDF using PyMuPDF (fitz)"""
     doc = fitz.open(stream=contents, filetype="pdf")
     pages = []
 
