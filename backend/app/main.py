@@ -17,10 +17,6 @@ from app.routes import (
     chat
 )
 
-# Warm up from llm and relationship service
-from app.services.llm import warm_up
-from app.services.relationship import _get_nli
-
 ### Set up configs
 from app.configs.config import RESET_DB
 
@@ -58,6 +54,10 @@ async def lifespan(app: FastAPI):
     
     # Loading models
     # logger.info("Warming up ML models...")
+    
+    # Warm up from llm and relationship service
+    # from app.services.llm import warm_up
+    # from app.services.relationship import _get_nli
     # _get_nli()
     # await warm_up()
 

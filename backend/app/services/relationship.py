@@ -3,7 +3,6 @@ import time
 import asyncio
 import requests
 from dotenv import load_dotenv
-from transformers import pipeline as hf_pipeline
 
 from app.db.operations import (
     get_similar_concepts_by_concept_id,
@@ -35,10 +34,13 @@ def _get_nli():
     global _nli
     if _nli is None:
         logger.info("Loading NLI classifier - first call only")
+
+        from transformers import pipeline as hf_pipeline
         _nli = hf_pipeline(
             "zero-shot-classification",
             model=NLI_MODEL
         )
+        
         logger.info("NLI classifier loaded")
     return _nli
 

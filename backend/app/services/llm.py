@@ -1,9 +1,7 @@
 import os
 import time
-import torch
 import asyncio
 from dotenv import load_dotenv
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from openai import AsyncOpenAI
 
 ### Set up configs
@@ -43,6 +41,9 @@ async def _get_model_and_tokenizer():
             return _model, _tokenizer
 
         logger.info(f"Loading local model '{LOCAL_LLM}'")
+
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
 
         _tokenizer = AutoTokenizer.from_pretrained(LOCAL_LLM)
         _model = AutoModelForCausalLM.from_pretrained(
