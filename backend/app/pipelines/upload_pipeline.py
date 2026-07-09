@@ -85,13 +85,15 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
         await tracker.update("Generating semantic embeddings...", percent=70)
         batch_concepts = []
         for concept in concepts_dict.values():
-            concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
+            embeddings = await generate_embeddings(concept.get("raw_text", ""))
+            concept["embedding"] = embeddings[0]
             batch_concepts.append(concept)
 
         # Saving to db
         await tracker.update("Saving concepts to database...", percent=80)
         all_concepts = create_batch_concept(db=db, batch_concepts=batch_concepts)
         updated  = [c for c in all_concepts if c["updated"]]
+        inserted  = [c for c in all_concepts if not c["updated"]]
 
         # Re-embedding for updated concepts 
         if updated:
@@ -99,7 +101,8 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                 f"Re-embedding {len(updated)} merged concept(s)...", percent=85
             )
             for concept in updated:
-                new_embedding = generate_embeddings(concept.get("raw_text", ""))
+                embeddings = await generate_embeddings(concept.get("raw_text", ""))
+                new_embedding = embeddings[0]
                 update_concept_embedding(db, concept["id"], new_embedding)
                 concept["embedding"] = new_embedding
 
@@ -128,7 +131,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                 f"Relationships generating in background."
             ),
             metadata={
-                "document_id": document.id,
+                "document_id": document["id"],
                 "num_chunks": len(chunks),
                 "new_concepts": len(inserted),
                 "merged_concepts": len(updated),
