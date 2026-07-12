@@ -1,4 +1,4 @@
-import fitz
+import pymupdf
 from pptx import Presentation
 from docx import Document
 from fastapi import UploadFile
@@ -65,8 +65,8 @@ def _extract_docx(contents: bytes):
 
 
 def _extract_pdf(contents: bytes):
-    """Extract text from a PDF using PyMuPDF (fitz)    """
-    doc = fitz.open(stream=contents, filetype="pdf")
+    """Extract text from a PDF using PyMuPDF"""
+    doc = pymupdf.open(stream=contents, filetype="pdf")
     pages = []
 
     for page_num, page in enumerate(doc):

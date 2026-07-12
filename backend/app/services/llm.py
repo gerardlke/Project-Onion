@@ -12,12 +12,12 @@ from app.configs.config import (
     LOCAL_LLM,
     API_LLM
 )
-load_dotenv()
 
 ### Set up logger
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 
+load_dotenv()
 
 # Groq API 
 groq_client = AsyncOpenAI(

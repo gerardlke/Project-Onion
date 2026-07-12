@@ -92,6 +92,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
         await tracker.update("Saving concepts to database...", percent=80)
         all_concepts = create_batch_concept(db=db, batch_concepts=batch_concepts)
         updated  = [c for c in all_concepts if c["updated"]]
+        inserted  = [c for c in all_concepts if not c["updated"]]
 
         # Re-embedding for updated concepts 
         if updated:

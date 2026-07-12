@@ -18,7 +18,7 @@ from app.routes import (
 )
 
 # Warm up from llm and relationship service
-from app.services.llm import warm_up
+from app.services.llm import llm_warm_up
 from app.services.relationship import _get_nli
 
 ### Set up configs
