@@ -17,6 +17,7 @@ export default function Upload({ loggedInUser, onLogout }) {
 
   // Track which topics are currently uploading to show a loading state.
   const [uploadingTopics, setUploadingTopics] = useState({});
+  const [uploadProgress, setUploadProgress] = useState(null);
 
   // Topic creation card
   const [showNewTopicCard, setShowNewTopicCard] = useState(false);
@@ -82,6 +83,7 @@ export default function Upload({ loggedInUser, onLogout }) {
 
     // Show loading state for this topic during the upload call.
     setUploadingTopics((current) => ({ ...current, [selectedTopic]: true }));
+    setUploadProgress({ percent: 0, message: 'Starting upload...' });
     setUploadMessages((current) => ({ ...current, [selectedTopic]: 'Uploading...' }));
 
     const formData = new FormData();
@@ -99,18 +101,49 @@ export default function Upload({ loggedInUser, onLogout }) {
           ...current,
           [selectedTopic]: errorBody?.detail || 'Upload failed.',
         }));
+        setUploadProgress(null);
         return;
       }
-      const result = await response.json();
-      if (!result.success) {
-        setUploadMessages((current) => ({ ...current, [selectedTopic]: 'Upload failed.' }));
-        return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        // Keep the last incomplete line in the buffer.
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+
+          try {
+            const payload = JSON.parse(trimmed.slice(5).trim());
+
+            if (typeof payload.percent === 'number') {
+              setUploadProgress({
+                percent: payload.percent,
+                message: payload.message || '',
+              });
+            }
+
+            // Backend signals completion with percent === 100 or a success flag.
+            if (payload.percent === 100 || payload.success === true) {
+              setUploadMessages((current) => ({
+                ...current,
+                [selectedTopic]: `Uploaded ${file.name} successfully.`,
+              }));
+            }
+          } catch {
+            // Malformed line — ignore and continue reading.
+          }
+        }
       }
-      // Upload response is metadata only
-      setUploadMessages((current) => ({
-        ...current,
-        [selectedTopic]: `Uploaded ${result.filename || file.name} successfully.`,
-      }));
       
     } catch {
       setUploadMessages((current) => ({
@@ -120,6 +153,7 @@ export default function Upload({ loggedInUser, onLogout }) {
     } finally {
       // Always clear loading state when the call settles.
       setUploadingTopics((current) => ({ ...current, [selectedTopic]: false }));
+      setTimeout(() => setUploadProgress(null), 1200);
     }
   }
 
@@ -128,10 +162,18 @@ export default function Upload({ loggedInUser, onLogout }) {
   return (
     <div className="app">
       {/* Full screen loading overlay*/}
-      {isUploading && (
-        <div className="upload-overlay" role="status" aria-label="Uploading document">
-          <div className="upload-spinner" />
-          <p className="upload-overlay-text">Processing your document…</p>
+      {uploadProgress !== null && (
+        <div className="upload-overlay">
+          <div className="upload-progress-card">
+            <p className="upload-progress-message">{uploadProgress.message}</p>
+            <div className="upload-progress-track">
+              <div
+                className="upload-progress-fill"
+                style={{ width: `${uploadProgress.percent}%` }}
+              />
+            </div>
+            <p className="upload-progress-percent">{uploadProgress.percent}%</p>
+          </div>
         </div>
       )}
 
