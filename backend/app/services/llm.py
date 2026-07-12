@@ -1,9 +1,7 @@
 import os
 import time
-import torch
 import asyncio
 from dotenv import load_dotenv
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from openai import AsyncOpenAI
 
 ### Set up configs
@@ -44,6 +42,9 @@ async def _get_model_and_tokenizer():
 
         logger.info(f"Loading local model '{LOCAL_LLM}'")
 
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
         _tokenizer = AutoTokenizer.from_pretrained(LOCAL_LLM)
         _model = AutoModelForCausalLM.from_pretrained(
             LOCAL_LLM,
@@ -72,7 +73,9 @@ async def local_generate(messages, max_new_tokens, temperature):
         
         def sync_generate():
             output = model.generate(
-                encoded, max_new_tokens=max_new_tokens, do_sample=(temperature > 0.0),
+                encoded,
+                max_new_tokens=max_new_tokens,
+                do_sample=(temperature > 0.0),
                 temperature=temperature if temperature > 0.0 else None,
                 pad_token_id=tokenizer.eos_token_id
             )
@@ -119,8 +122,9 @@ async def generate(prompt: str = None, messages: list[dict] = None, max_new_toke
     start = time.time()
 
     if LOCAL_DEPLOYMENT:
-        res = local_generate(messages, max_new_tokens, temperature)
-    res = api_generate(messages, max_new_tokens, temperature)
+        res = await local_generate(messages, max_new_tokens, temperature)
+    else:
+        res = await api_generate(messages, max_new_tokens, temperature)
 
     logger.info(f"LLM generation completed in {round(time.time() - start)}s")
     return res

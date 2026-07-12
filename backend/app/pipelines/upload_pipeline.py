@@ -6,7 +6,7 @@ from app.services.chunk import chunk_text
 from app.services.progress import ProgressTracker
 from app.services.concepts import (
     extract_concepts,
-    find_existing
+    find_existing_match
 )
 from app.services.embed import (
     generate_embeddings
@@ -54,12 +54,9 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
 
         # Concept extraction
         concepts_dict = {}
+        total_chunks = len(chunks)
         for i, chunk in enumerate(chunks):
-            percent = 15 + int((i / len(chunks)) * 50)  # Progress moves from 15% to 65% across all chunks
-            await tracker.update(
-                f"Extracting concepts from segment {i + 1} of {len(chunks)}...",
-                percent=percent
-            )
+            await tracker.update(f"Extracting concepts from segment {i + 1} of {total_chunks}...", percent=(15 + int(i / total_chunks * 35)))  # Progress moves from 15% to 50% across all chunks
 
             concepts = await extract_concepts(chunk)
             for c in concepts:
@@ -67,7 +64,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                     continue
                 name = c.get("name")
                 description = c.get("description", "")
-                match = find_existing(name, concepts_dict, description=description)
+                match = await find_existing_match(name, concepts_dict, description=description)
                 if match is not None:
                     concepts_dict[match]["raw_text"] += ". " + description
                 else:
@@ -77,15 +74,16 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                         "raw_text": description
                     }
 
-        await tracker.update(
-            f"Found {len(concepts_dict)} unique concept(s).", percent=65
-        )
+        await tracker.update(f"Found {len(concepts_dict)} unique concept(s).", percent=50)
 
         # Embedding concepts
-        await tracker.update("Generating semantic embeddings...", percent=70)
+        await tracker.update("Generating semantic embeddings...", percent=50)
+        texts = [concept.get("raw_text", "") for concept in concepts_dict.values()]
+        all_embeddings = await generate_embeddings(texts)
+
         batch_concepts = []
-        for concept in concepts_dict.values():
-            concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
+        for concept, embedding in zip(concepts_dict.values(), all_embeddings):
+            concept["embedding"] = embedding
             batch_concepts.append(concept)
 
         # Saving to db
@@ -94,13 +92,14 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
         updated  = [c for c in all_concepts if c["updated"]]
         inserted  = [c for c in all_concepts if not c["updated"]]
 
-        # Re-embedding for updated concepts 
+        # Re-embedding for updated concepts
         if updated:
-            await tracker.update(
-                f"Re-embedding {len(updated)} merged concept(s)...", percent=85
-            )
-            for concept in updated:
-                new_embedding = generate_embeddings(concept.get("raw_text", ""))
+            await tracker.update(f"Re-embedding {len(updated)} merged concept(s)...", percent=85)
+
+            updated_texts = [concept.get("raw_text", "") for concept in updated]
+            new_embeddings = await generate_embeddings(updated_texts)
+
+            for concept, new_embedding in zip(updated, new_embeddings):
                 update_concept_embedding(db, concept["id"], new_embedding)
                 concept["embedding"] = new_embedding
 
@@ -129,7 +128,7 @@ async def process_document(db, user, file: UploadFile, topic_name: str, backgrou
                 f"Relationships generating in background."
             ),
             metadata={
-                "document_id": document.id,
+                "document_id": document["id"],
                 "num_chunks": len(chunks),
                 "new_concepts": len(inserted),
                 "merged_concepts": len(updated),

@@ -18,8 +18,8 @@ from app.routes import (
 )
 
 # Warm up from llm and relationship service
-from app.services.llm import llm_warm_up
-from app.services.relationship import _get_nli
+from app.services.llm import llm_warm_up  # noqa: F401
+from app.services.relationship import _get_nli  # noqa: F401
 
 ### Set up configs
 from app.configs.config import RESET_DB
@@ -27,6 +27,7 @@ from app.configs.config import RESET_DB
 ### Set up logger
 from app.logging import setup_logger
 logger = setup_logger(__name__)
+
 
 ### Application Lifespan ==================================
 
@@ -39,9 +40,8 @@ async def lifespan(app: FastAPI):
     - vector indices
     - caches
     """
-
     logger.info("Starting backend...")
-    
+
     # Setting up database
     logger.info("Starting database...")
     if RESET_DB:
@@ -55,11 +55,6 @@ async def lifespan(app: FastAPI):
         seed_relation_types(db)
     finally:
         db.close()
-    
-    # Loading models
-    # logger.info("Warming up ML models...")
-    # _get_nli()
-    # await warm_up()
 
     logger.info("Backend started")
 

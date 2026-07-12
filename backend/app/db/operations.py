@@ -268,8 +268,8 @@ def create_batch_concept(db: Session, batch_concepts: list):
             params[f"{col}_{i}"] = concept[col]
 
     query = f"""
-        INSERT INTO concepts (user_id, name, raw_text, embedding) 
-        VALUES ({", ".join(values)})
+        INSERT INTO concepts ({", ".join(columns)}) 
+        VALUES {", ".join(values)}
         ON CONFLICT (user_id, name) DO UPDATE
             SET raw_text = concepts.raw_text || '. ' || EXCLUDED.raw_text
         RETURNING *, (xmax != 0) AS updated

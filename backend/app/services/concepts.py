@@ -1,7 +1,6 @@
 import re
 import json
 from rapidfuzz import fuzz
-from sklearn.metrics.pairwise import cosine_similarity
 
 from app.services.llm import generate
 from app.services.embed import generate_embeddings
@@ -18,6 +17,27 @@ from app.configs.config import (
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 
+
+### Helper function
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Compute cosine similarity between two embedding vectors.
+    
+    CHANGED: replaced sklearn.metrics.pairwise.cosine_similarity with
+    numpy dot product — sklearn expects 2D arrays and pulls in scipy
+    as a dependency. numpy works directly on 1D vectors and is already
+    a required dependency.
+    """
+    import numpy as np
+    va = np.array(a)
+    vb = np.array(b)
+    denom = np.linalg.norm(va) * np.linalg.norm(vb)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(va, vb) / denom)
+
+
+### Main concept functions
 
 async def extract_concepts(chunk: str):
     """Ask LLM to extract meaningful concepts from a single chunk. Returns list of {"name": str, "description": str}
@@ -45,16 +65,17 @@ async def extract_concepts(chunk: str):
         logger.warning(f"[concept_extraction] Failed to parse JSON from chunk: {raw[:200]}")
         return []
 
-def find_existing(name: str, aggregated: dict):
+
+async def find_existing_match(name: str, aggregated: dict, description: str = ""):
     """
     Return the key of the best matching concept in aggregated, or None.
     Uses a two-stage approach: Fuzzy string match as a cheap pre-filter, then embedding similarity on 'name: description' for ambiguous pairs
 
     Input:
-        - name:         incoming concept name to match
-        - aggregated:   dict of existing concepts keyed by name
-        - description:  incoming concept description (improves embedding accuracy)
-        - threshold:    unused legacy param — kept for backwards compatibility
+        name:           incoming concept name to match
+        aggregated:     dict of existing concepts keyed by name
+        description:    incoming concept description (improves embedding accuracy)
+        threshold:      unused legacy param — kept for backwards compatibility
 
     Output:
         Name of matching concept in aggregated, or None
@@ -82,7 +103,7 @@ def find_existing(name: str, aggregated: dict):
     if not possible_matches:
         return None
 
-    embedded_matches = generate_embeddings([name] + possible_matches)
+    embedded_matches = await generate_embeddings([f"{name}: {description}" if description else name] + possible_matches)
     embedded_name = embedded_matches.pop(0)
 
     # Attempt semantic matching

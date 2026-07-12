@@ -1,6 +1,10 @@
+import os
 import time
-from sentence_transformers import SentenceTransformer
-from sklearn.decomposition import PCA
+import asyncio
+import numpy as np
+from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
+
 
 ### Set up configs
 from app.configs.config import (
@@ -11,18 +15,28 @@ from app.configs.config import (
 ### Set up logger for model logs
 from app.logging import setup_logger
 logger = setup_logger(__name__)
+load_dotenv()
 
+# API encoder
+_hf_client = InferenceClient(
+    provider="hf-inference",
+    api_key=os.getenv("HF_TOKEN"),
+)
+
+# Local encoder
 _encoder = None
 
 async def _get_encoder():
     """Lazily load encoder on first call, then reuse"""
+    global _encoder
     if _encoder is not None:
         return _encoder
     
     logger.info("Setting up encoder")
+    from sentence_transformers import SentenceTransformer
     _encoder = SentenceTransformer(ENCODER)
     logger.info("Encoder downloaded")
-
+    
     return _encoder
 
 
@@ -33,37 +47,62 @@ async def encoder_warm_up():
     logger.info("Encoder warm-up complete")
 
 
-async def generate_embeddings(concepts: list[str]):
-    """Embeds concepts using loaded encoder 
+def local_embed(concepts):
+    """Generates embedding using local encoder
 
     Input:
-
-    Ouput:
+    
+    Output:
     """
-    model = await _get_encoder()
-    start = time.time()
+    model = _get_encoder()
     embeddings = model.encode(
         concepts,
         convert_to_numpy=True
     )
-    logger.info(f"Embeddings generated for {len(concepts)} concept(s) in {round(time.time() - start)}s")
     return embeddings.tolist()
 
 
-def reduce_dimensions(embeddings, dimensions: int = 3):
-    """Reduce dimensions of embedded notes to desired dimensions via PCA and return new coordinates
+def api_embed(concepts):
+    """Generates embedding using API encoder
+
+    Input:
+    
+    Output:
+    """
+    embeddings = []
+    for text in concepts:
+        result = _hf_client.feature_extraction(
+            text,
+            model=ENCODER,
+        )
+        arr = np.array(result)
+        
+        if arr.ndim == 2:
+            arr = arr.mean(axis=0)
+        embeddings.append(arr.tolist())
+    return embeddings
+
+
+async def generate_embeddings(concepts: list[str]):
+    """Embeds concepts using preset encoder 
 
     Input:
 
     Ouput:
     """
-    pca = PCA(
-        n_components=dimensions
-    )
     start = time.time()
-    projected = pca.fit_transform(
-        embeddings
-    )
-    logger.info(f"Reduced dimensions from {embeddings.shape[1]}D to {projected.shape[1]}D in {round(time.time() - start)}s")
 
-    return projected
+    if LOCAL_DEPLOYMENT:
+        embeddings = await asyncio.to_thread(local_embed, concepts)
+    else:
+        try:
+            embeddings = await asyncio.to_thread(api_embed, concepts)
+        except Exception as e:
+            logger.warning(f"HF InferenceClient failed ({e}) — falling back to local encoder")
+            embeddings = await asyncio.to_thread(local_embed, concepts)
+
+    logger.info(
+        f"Embeddings generated for {len(concepts)} concept(s) "
+        f"in {round(time.time() - start, 2)}s"
+    )
+    return embeddings

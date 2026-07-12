@@ -17,6 +17,9 @@ services:
   backend:
     build:
       context: ./backend
+    dns:
+      - 8.8.8.8      # Google DNS
+      - 8.8.4.4      # Google DNS fallback
     container_name: project_onion_backend
     restart: always
     env_file:

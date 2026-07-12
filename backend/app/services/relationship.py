@@ -1,9 +1,8 @@
 import os
 import time
 import asyncio
-import requests
 from dotenv import load_dotenv
-from transformers import pipeline as hf_pipeline
+from huggingface_hub import InferenceClient
 
 from app.db.operations import (
     get_similar_concepts_by_concept_id,
@@ -17,15 +16,17 @@ from app.configs.config import (
     RELATIONSHIP_LIMIT,
     CONFIDENCE_THRESHOLD,
     LOCAL_DEPLOYMENT,
-    LOCAL_NLI
+    NLI_MODEL
 )
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 load_dotenv()
 
 # API NLI model
-HF_API_URL = f"https://api-inference.huggingface.co/models/{LOCAL_NLI}"
-HEADERS = {"Authorization": f"Bearer {os.getenv('HF_TOKEN')}"}
+_hf_client = InferenceClient(
+    provider="hf-inference",
+    api_key=os.getenv("HF_TOKEN"),
+)
 
 # Local NLI model
 _nli = None
@@ -35,10 +36,13 @@ def _get_nli():
     global _nli
     if _nli is None:
         logger.info("Loading NLI classifier - first call only")
+
+        from transformers import pipeline as hf_pipeline
         _nli = hf_pipeline(
             "zero-shot-classification",
-            model=LOCAL_NLI
+            model=NLI_MODEL
         )
+        
         logger.info("NLI classifier loaded")
     return _nli
 
@@ -98,18 +102,33 @@ def api_classify_relation(source: dict, target: dict, type_lookup: dict):
         f"'{source.get('name', '')}': {source.get('raw_text', '')} "
         f"and '{target.get('name', '')}': {target.get('raw_text', '')}"
     )
-    payload = {"inputs": sequence, "parameters": {"candidate_labels": list(type_lookup.keys())}}
-    response = requests.post(HF_API_URL, headers=HEADERS, json=payload)
+    try:
+        result = _hf_client.zero_shot_classification(
+            sequence,
+            labels=list(type_lookup.keys()),
+            model=NLI_MODEL
+        )
 
-    result = response.json()
-    
-    top_label = result["labels"][0]
-    confidence = result["scores"][0]
-    relation_type = type_lookup.get(top_label)
-    
-    logger.info(f"Classified '{source.get("name")}' and '{target.get("name")}' as {relation_type["name"]} ({confidence * 100:.2f}%)")
+        top_label = result.labels[0]
+        confidence = result.scores[0]
+        relation_type = type_lookup.get(top_label)
 
-    return relation_type["id"], confidence
+        if relation_type is None:
+            logger.warning(f"Unknown label from HF API: '{top_label}'")
+            return None, 0.0
+
+        logger.info(
+            f"Classified '{source.get('name')}' → '{target.get('name')}' "
+            f"as {relation_type['name']} ({confidence * 100:.2f}%)"
+        )
+        return relation_type["id"], confidence
+
+    except Exception as e:
+        logger.error(f"HF NLI API error: {e} — falling back to SIMILAR")
+        fallback = next(
+            (r for r in type_lookup.values() if r["name"] == "SIMILAR"), None
+        )
+        return (fallback["id"] if fallback else None), 0.0
 
 
 def generate_relationships(db, concepts: list, user_id: int):
@@ -193,7 +212,7 @@ def generate_relationships(db, concepts: list, user_id: int):
         
     summary = {
         "concepts_processed": len(concepts),
-        "relationships_created": seen_pairs,
+        "relationships_created": len(seen_pairs),
         "failed_concept_ids": failed,
         "time_taken": round(time.time() - start)
     }
