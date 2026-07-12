@@ -115,23 +115,3 @@ async def generate_embeddings(concepts: list[str]):
         f"in {round(time.time() - start, 2)}s"
     )
     return embeddings
-
-
-def reduce_dimensions(embeddings, dimensions: int = 3):
-    """Reduce dimensions of embedded notes to desired dimensions via PCA and return new coordinates
-
-    Input:
-
-    Ouput:
-    """
-    from sklearn.decomposition import PCA
-    pca = PCA(
-        n_components=dimensions
-    )
-    start = time.time()
-    projected = pca.fit_transform(
-        embeddings
-    )
-    logger.info(f"Reduced dimensions from {embeddings.shape[1]}D to {projected.shape[1]}D in {round(time.time() - start)}s")
-
-    return projected
