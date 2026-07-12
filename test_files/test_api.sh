@@ -71,4 +71,66 @@ echo "[API] GET /universe/relation/{id}"
 curl -X GET $BASE_URL/universe/relation/1 -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
 
+echo "===== 4. CHATBOT API ======"
+
+# Single-turn query — no conversation history
+echo "[API] POST /chat/query - single turn"
+CHAT_RESPONSE=$(curl -s -X POST $BASE_URL/chat/query \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": "What is a Binary Search Tree?",
+       "conversation_history": []
+     }')
+echo "$CHAT_RESPONSE"
+echo -e "\n"
+
+# Multi-turn query — passes prior turn as conversation history
+echo "[API] POST /chat/query - multi-turn (with conversation history)"
+curl -X POST $BASE_URL/chat/query \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": "How does it differ from an AVL Tree?",
+       "conversation_history": [
+         {"role": "user",      "content": "What is a Binary Search Tree?"},
+         {"role": "assistant", "content": "According to your notes, a Binary Search Tree is a \"Hierarchical data structure for efficient search.\""}
+       ]
+     }'
+echo -e "\n"
+
+# Query outside the uploaded knowledge base — tests graceful handling
+echo "[API] POST /chat/query - out of domain query"
+curl -X POST $BASE_URL/chat/query \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": "What is the capital of France?",
+       "conversation_history": []
+     }'
+echo -e "\n"
+
+# Unauthenticated request — should return 401
+echo "[API] POST /chat/query - unauthenticated (expect 401)"
+curl -s -o /dev/null -w "HTTP status: %{http_code}\n" \
+     -X POST $BASE_URL/chat/query \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": "What is recursion?",
+       "conversation_history": []
+     }'
+echo -e "\n"
+
+# Empty query — tests input validation
+echo "[API] POST /chat/query - empty query (expect 422)"
+curl -s -o /dev/null -w "HTTP status: %{http_code}\n" \
+     -X POST $BASE_URL/chat/query \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": "",
+       "conversation_history": []
+     }'
+echo -e "\n"
+
 echo "--- Testing Complete ---"

@@ -8,12 +8,17 @@ from app.db.database import (
     Base
 )
 from app.db.seed import seed_relation_types
+import app.db.models  # noqa: F401
 from app.routes import (
     admin,
     upload,
     universe,
-    user
+    user,
+    chat
 )
+
+# Warm up llm
+from app.services.llm import llm_warm_up  # noqa: F401
 
 ### Set up configs
 from app.configs.config import RESET_DB
@@ -21,6 +26,7 @@ from app.configs.config import RESET_DB
 ### Set up logger
 from app.logging import setup_logger
 logger = setup_logger(__name__)
+
 
 ### Application Lifespan ==================================
 
@@ -33,12 +39,8 @@ async def lifespan(app: FastAPI):
     - vector indices
     - caches
     """
-
     logger.info("Starting backend...")
 
-    # TODO: Load things needed in backend
-    # app.state.embedding_model = load_embedding_model()
-    
     # Setting up database
     logger.info("Starting database...")
     if RESET_DB:
@@ -46,11 +48,14 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
 
     # Seed static data
+    logger.info("Seeding database...")
     db = SessionLocal()
     try:
         seed_relation_types(db)
     finally:
         db.close()
+
+    logger.info("Backend started")
 
     yield
     logger.info("Shutting down backend...")
@@ -107,4 +112,10 @@ app.include_router(
     user.router,
     prefix="/user",
     tags=["User"]
+)
+
+app.include_router(
+    chat.router,
+    prefix="/chat",
+    tags=["Chat"]
 )

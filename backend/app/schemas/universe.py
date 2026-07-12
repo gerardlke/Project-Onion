@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel
 
 
@@ -10,10 +9,14 @@ class TopicNode(BaseModel):
 class TopicResponse(BaseModel):
     nodes: list[TopicNode]
 
+class TopicDetailResponse(BaseModel):
+    id: int
+    topic: str
+    description: str
+
 class ConceptNode(BaseModel):
     id: int
-    document_id: int
-    topic_id: int
+    topic_id: int | None
     coordinates: list[float]
 
 class NodeResponse(BaseModel):
@@ -36,5 +39,6 @@ class RelationResponse(BaseModel):
 class RelationDetailResponse(BaseModel):
     id: int
     name: str
+    weight: float
     description: str
     explanation: str

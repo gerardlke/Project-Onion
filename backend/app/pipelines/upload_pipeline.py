@@ -3,9 +3,10 @@ from fastapi import UploadFile, BackgroundTasks
 from app.pipelines.relationship_pipeline import run_relationship_pipeline
 from app.services.extract import extract_text
 from app.services.chunk import chunk_text
+from app.services.progress import ProgressTracker
 from app.services.concepts import (
     extract_concepts,
-    find_existing
+    find_existing_match
 )
 from app.services.embed import (
     generate_embeddings
@@ -14,7 +15,9 @@ from app.services.embed import (
 from app.db.operations import (
     get_topic_by_name,
     create_document,
-    create_batch_concept
+    create_batch_concept,
+    update_concept_embedding,
+    create_concept_to_document
 )
 
 ### Set up logger
@@ -22,73 +25,117 @@ from app.logging import setup_logger
 logger = setup_logger(__name__)
 
 
-async def process_document(db, user, file: UploadFile, topic_name: str, background_tasks: BackgroundTasks, **kwargs):
+async def process_document(db, user, file: UploadFile, topic_name: str, background_tasks: BackgroundTasks, tracker: ProgressTracker, **kwargs):
     """Main pipeline orchestration for upload process
 
     Input:
 
     Ouput:
     """
-    # Extract raw text and save topic/document to db first
-    raw_text = await extract_text(file)
-    
-    topic = get_topic_by_name(db, topic_name)[0]
+    try:
+        # Extract text
+        await tracker.update("Extracting text from file...", percent=5)
+        raw_text = await extract_text(file)
 
-    document = create_document(
-        db=db,
-        topic_id=topic["id"],
-        filename=file.filename,
-        content_type=file.content_type,
-        raw_text=raw_text
-    )
+        # Create document in db
+        await tracker.update("Saving document record...", percent=10)
+        topic = get_topic_by_name(db, topic_name)[0]
+        document = create_document(
+            db=db,
+            topic_id=topic["id"],
+            filename=file.filename,
+            content_type=file.content_type,
+            raw_text=raw_text
+        )
 
-    # Break text up into chunks, then extract concept names and descriptions
-    concepts_dict = {}
-    chunks = chunk_text(raw_text)
-    for chunk in chunks:
-        concepts = await extract_concepts(chunk)
-        for c in concepts:
-            if c.get("name", ""):
+        # Chunk text
+        await tracker.update("Chunking document into segments...", percent=15)
+        chunks = chunk_text(raw_text)
 
-                # Aggregate concepts to reduce cluster
-                match = find_existing(c.get("name"), concepts_dict)
+        # Concept extraction
+        concepts_dict = {}
+        total_chunks = len(chunks)
+        for i, chunk in enumerate(chunks):
+            await tracker.update(f"Extracting concepts from segment {i + 1} of {total_chunks}...", percent=(15 + int(i / total_chunks * 35)))  # Progress moves from 15% to 50% across all chunks
 
+            concepts = await extract_concepts(chunk)
+            for c in concepts:
+                if not c.get("name"):
+                    continue
+                name = c.get("name")
+                description = c.get("description", "")
+                match = await find_existing_match(name, concepts_dict, description=description)
                 if match is not None:
-                    concepts_dict[match]["raw_text"] += c.get("description", "")
+                    concepts_dict[match]["raw_text"] += ". " + description
                 else:
-                    concepts_dict[c.get("name")] = {
-                        "document_id": document.id,
-                        "name": c.get("name"),
-                        "raw_text": c.get("description", "")
+                    concepts_dict[name] = {
+                        "user_id": user["id"],
+                        "name": name,
+                        "raw_text": description
                     }
 
-    # Embed aggregated concepts
-    batch_concepts, concepts = [], []
-    for name, concept in concepts_dict.items():
-        concept["embedding"] = generate_embeddings(concept.get("raw_text", ""))
-        batch_concepts.append(concept)
-        concepts.append(name)
+        await tracker.update(f"Found {len(concepts_dict)} unique concept(s).", percent=50)
 
-    # Save concepts to db in batches
-    create_batch_concept(
-        db=db,
-        batch_concepts=batch_concepts
-    )
+        # Embedding concepts
+        await tracker.update("Generating semantic embeddings...", percent=50)
+        texts = [concept.get("raw_text", "") for concept in concepts_dict.values()]
+        all_embeddings = await generate_embeddings(texts)
 
-    logger.info(f"Batch uploaded content for {len(batch_concepts)} concepts")
+        batch_concepts = []
+        for concept, embedding in zip(concepts_dict.values(), all_embeddings):
+            concept["embedding"] = embedding
+            batch_concepts.append(concept)
 
-    # Start relationship generation pipeline here
-    background_tasks.add_task(
-        run_relationship_pipeline,
-        concept_names=concepts,
-        user_id=user["id"]
-    )
+        # Saving to db
+        await tracker.update("Saving concepts to database...", percent=80)
+        all_concepts = create_batch_concept(db=db, batch_concepts=batch_concepts)
+        updated  = [c for c in all_concepts if c["updated"]]
+        inserted  = [c for c in all_concepts if not c["updated"]]
 
-    logger.info(f"Relationship generation scheduled for {len(concepts)} concept(s)")
+        # Re-embedding for updated concepts
+        if updated:
+            await tracker.update(f"Re-embedding {len(updated)} merged concept(s)...", percent=85)
 
-    # Return metadata to upload route
-    return {
-        "id": document.id,
-        "num_chunks": len(chunks),
-        "concepts": concepts
-    }
+            updated_texts = [concept.get("raw_text", "") for concept in updated]
+            new_embeddings = await generate_embeddings(updated_texts)
+
+            for concept, new_embedding in zip(updated, new_embeddings):
+                update_concept_embedding(db, concept["id"], new_embedding)
+                concept["embedding"] = new_embedding
+
+        # Adding junction table relation to db
+        await tracker.update("Recording document provenance...", percent=90)
+        for concept in all_concepts:
+            create_concept_to_document(
+                db=db,
+                concept_id=concept["id"],
+                document_id=document["id"]
+            )
+
+        # Starting relationship generation for all new/updated concepts
+        await tracker.update("Scheduling relationship generation...", percent=95)
+        concept_names = [c["name"] for c in all_concepts]
+        background_tasks.add_task(
+            run_relationship_pipeline,
+            concept_names=concept_names,
+            user_id=user["id"]
+        )
+
+        await tracker.complete(
+            message=(
+                f"Upload complete — {len(inserted)} new concept(s), "
+                f"{len(updated)} merged. "
+                f"Relationships generating in background."
+            ),
+            metadata={
+                "document_id": document["id"],
+                "num_chunks": len(chunks),
+                "new_concepts": len(inserted),
+                "merged_concepts": len(updated),
+            }
+        )
+
+    except Exception as e:
+        logger.exception(f"Upload pipeline failed for '{file.filename}': {e}")
+        await tracker.error(f"Upload failed: {str(e)}")
+        raise

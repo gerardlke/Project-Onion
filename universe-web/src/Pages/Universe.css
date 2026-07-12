@@ -1,0 +1,95 @@
+.universe-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.network-panel-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.network-panel-full canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.universe-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  gap: 16px;
+  padding: 18px 28px;
+  background: linear-gradient(180deg, rgba(8, 11, 22, 0.65) 0%, rgba(8, 11, 22, 0) 100%);
+  pointer-events: none;
+}
+
+.universe-header > * {
+  pointer-events: auto;
+}
+
+.universe-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.universe-btn {
+  width: 170px;
+  background: rgba(13, 21, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  color: white;
+  font: inherit;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 8px 14px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.universe-btn:hover {
+  background: rgba(99, 120, 255, 0.18);
+  border-color: rgba(99, 120, 255, 0.5);
+}
+
+.universe-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.universe-btn--accent {
+  border-color: rgba(99, 120, 255, 0.5);
+  background: rgba(79, 70, 229, 0.22);
+}
+
+.universe-btn--accent:hover {
+  background: rgba(79, 70, 229, 0.35);
+}
+
+.universe-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .universe-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

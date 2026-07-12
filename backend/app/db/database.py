@@ -21,7 +21,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(
     DATABASE_URL,
-    echo=False,  # Turned off to reduce log confusion
+    # echo=False,             # turned off to reduce log confusion
+    pool_pre_ping=True,     # verifies connections before use 
+    pool_recycle=300,       # recycle connections every 5 minutes
+    connect_args={"sslmode": "require"} if "supabase.co" in DATABASE_URL else {}
 )
 
 with engine.connect() as connection:
@@ -36,11 +39,6 @@ else:
     logger.info("Database already exists.")
 
 Base = declarative_base()
-
-### Import database models
-from app.db.models import (
-    Users, Topics, Documents, Concepts, Relations, RelationTypes
-)
 
 Base.metadata.create_all(bind=engine)
 

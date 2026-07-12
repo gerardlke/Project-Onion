@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.orm import Session
 
 from app.db.database import SessionLocal
@@ -19,21 +20,19 @@ def run_relationship_pipeline(concept_names: list[str], user_id: int) -> None:
     db: Session = SessionLocal()
 
     try:
-        # Re-fetch concepts from DB using the IDs passed in
+        # Re-fetch concepts from DB using the names passed in
         concepts = get_concepts_by_names(db, concept_names)
 
         if not concepts:
             logger.warning(
-                f"Relationship pipeline: no concepts found for names '{concepts}'"
+                f"Relationship pipeline: no concepts found for names '{concept_names}'"
             )
             return
         
         logger.info(f"Starting relationship pipeline for user {user_id} with {len(concepts)} concept(s)")
 
-        generate_relationships(
-            db=db,
-            concepts=concepts,
-            user_id=user_id,
+        asyncio.run(
+            generate_relationships(db=db, concepts=concepts, user_id=user_id)
         )
 
     except Exception as e:

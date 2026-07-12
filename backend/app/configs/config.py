@@ -1,14 +1,22 @@
 # Upload configs
-ALLOWED_FILE_TYPES=[".txt", ".docx"]
-MAX_FILE_SIZE_MB=500
+SUPPORTED_EXTENSIONS={".txt", ".md", ".docx", ".pdf", ".pptx"}
+MAX_FILE_SIZE_MB=50
 
 # Model configs
-ENCODER = "all-MiniLM-L6-v2"
-MINI_LLM = "gpt-4o-mini"
+LOCAL_DEPLOYMENT = False
+ENCODER = "sentence-transformers/all-MiniLM-L6-v2"
+LOCAL_LLM = "Qwen/Qwen2.5-1.5B-Instruct"
+API_LLM = "llama-3.1-8b-instant"
+
+# Concept aggregation configs
+FUZZY_ACCEPT_THRESHOLD = 90
+FUZZY_REJECT_THRESHOLD = 50
+EMBEDDING_SIMILARITY_THRESHOLD = 0.80
 
 # Relationship configs
-SIMILARITY_THRESHOLD = 0.3
+SIMILARITY_THRESHOLD = 0.7
 RELATIONSHIP_LIMIT = 10
+CONFIDENCE_THRESHOLD = 0.5
 
 # Database configs
 RESET_DB = True
@@ -37,4 +45,49 @@ CONCEPT_EXTRACTION_PROMPT = """
     \"\"\"
     {chunk_text}
     \"\"\"
+"""
+
+# Relation generation configs
+RELATION_CLASSIFICATION_PROMPT = """
+    You are classifying the academic relationship between two concepts extracted from student study notes.
+
+    Classify the relationship from the SOURCE concept to the TARGET concept as exactly ONE of:
+    - SIMILAR: concepts share significant semantic overlap or describe the same idea
+    - PREREQUISITE: source concept must be understood before the target concept can be learned
+    - PART_OF: source concept is a component or sub-element of the target concept
+    - APPLICATION_OF: source concept is a practical use or implementation of the target concept
+    - ALIAS: source and target are different names for exactly the same idea
+    - CONTRASTS: concepts are meaningfully different despite surface similarity
+
+    SOURCE concept:
+    Name: {source_name}
+    Description: {source_text}
+
+    TARGET concept:
+    Name: {target_name}
+    Description: {target_text}
+
+    Return JSON only. No explanation outside the JSON.
+
+    Format:
+    {{
+        "relationship": "<TYPE>",
+        "confidence": <float between 0.0 and 1.0>,
+        "explanation": "<one sentence explaining why these concepts are related in this way>"
+    }}
+"""
+
+# RAG chatbot configs
+RAG_TOP_K = 10
+RAG_DISTANCE_THRESHOLD = 0.6
+RAG_SYSTEM_PROMPT = """
+    You are a study assistant helping a student understand concepts from their own uploaded notes.
+
+    You have been provided with relevant excerpts from the student's notes as context.
+    Answer the student's question using ONLY the provided context.
+    If the context does not contain enough information to answer the question, say so clearly — do not invent information.
+    Keep answers concise and educational. Reference specific concepts from the context by name where relevant.
+
+    Context from student's notes:
+    {context}
 """

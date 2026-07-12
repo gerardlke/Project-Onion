@@ -3,14 +3,41 @@ import json
 from rapidfuzz import fuzz
 
 from app.services.llm import generate
+from app.services.embed import generate_embeddings
 
 ### Set up configs
-from app.configs.config import CONCEPT_EXTRACTION_PROMPT
+from app.configs.config import (
+    CONCEPT_EXTRACTION_PROMPT,
+    FUZZY_ACCEPT_THRESHOLD,
+    FUZZY_REJECT_THRESHOLD,
+    EMBEDDING_SIMILARITY_THRESHOLD
+)
 
 ### Set up logger
 from app.logging import setup_logger
 logger = setup_logger(__name__)
 
+
+### Helper function
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Compute cosine similarity between two embedding vectors.
+    
+    CHANGED: replaced sklearn.metrics.pairwise.cosine_similarity with
+    numpy dot product — sklearn expects 2D arrays and pulls in scipy
+    as a dependency. numpy works directly on 1D vectors and is already
+    a required dependency.
+    """
+    import numpy as np
+    va = np.array(a)
+    vb = np.array(b)
+    denom = np.linalg.norm(va) * np.linalg.norm(vb)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(va, vb) / denom)
+
+
+### Main concept functions
 
 async def extract_concepts(chunk: str):
     """Ask LLM to extract meaningful concepts from a single chunk. Returns list of {"name": str, "description": str}
@@ -21,10 +48,9 @@ async def extract_concepts(chunk: str):
     """
     prompt = CONCEPT_EXTRACTION_PROMPT.format(chunk_text=chunk)
 
-    raw = await generate(prompt, max_new_tokens=1000, temperature=0.0)
+    raw = await generate(prompt=prompt, max_new_tokens=1000, temperature=0.0)
 
-    # Strip markdown fences — small local models do this even more often
-    # than hosted models, since they're less reliably instruction-following
+    # Strip markdown fences
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 
@@ -39,18 +65,53 @@ async def extract_concepts(chunk: str):
         logger.warning(f"[concept_extraction] Failed to parse JSON from chunk: {raw[:200]}")
         return []
 
-def find_existing(name: str, aggregated: dict, threshold: int = 85):
+
+async def find_existing_match(name: str, aggregated: dict, description: str = ""):
     """
-    Return name of best matching concept or None using fuzzy string match on lowercased names
+    Return the key of the best matching concept in aggregated, or None.
+    Uses a two-stage approach: Fuzzy string match as a cheap pre-filter, then embedding similarity on 'name: description' for ambiguous pairs
 
     Input:
+        name:           incoming concept name to match
+        aggregated:     dict of existing concepts keyed by name
+        description:    incoming concept description (improves embedding accuracy)
+        threshold:      unused legacy param — kept for backwards compatibility
 
-    Ouput:
+    Output:
+        Name of matching concept in aggregated, or None
     """
     best_match, best_score = None, 0.0
-    for existing in aggregated:
-        fuzzy_ratio = fuzz.ratio(name.lower(), aggregated[existing]["name"].lower())
-        if fuzzy_ratio >= threshold and fuzzy_ratio > best_score:
-            best_match = aggregated[existing]["name"]
-            best_score = fuzzy_ratio
+    possible_matches = []
+
+    # Attempt fuzzy matching first
+    for existing_name in aggregated:
+        fuzzy_score = fuzz.ratio(name.lower(), existing_name.lower())
+
+        if fuzzy_score >= FUZZY_ACCEPT_THRESHOLD and fuzzy_score > best_score:
+            best_match = existing_name
+            best_score = fuzzy_score
+            continue
+        
+        if fuzzy_score >= FUZZY_REJECT_THRESHOLD:
+            possible_matches.append(existing_name)
+
+    # If a good match above fuzzy threshold has been found already
+    if best_match: 
+        return best_match
+
+    # If no best match and all get fuzzy rejected, then no possibilities
+    if not possible_matches:
+        return None
+
+    embedded_matches = await generate_embeddings([f"{name}: {description}" if description else name] + possible_matches)
+    embedded_name = embedded_matches.pop(0)
+
+    # Attempt semantic matching
+    for idx, match in enumerate(embedded_matches):
+        similarity = cosine_similarity(embedded_name, match)
+
+        if similarity >= EMBEDDING_SIMILARITY_THRESHOLD and similarity > best_score:
+            best_match = possible_matches[idx]
+            best_score = similarity
+
     return best_match

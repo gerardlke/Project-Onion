@@ -2,8 +2,8 @@ import json
 from sqlalchemy.orm import Session
 from fastapi import (
     APIRouter,
-    HTTPException,
-    Depends
+    Depends,
+    HTTPException
 )
 
 from app.logging import setup_logger
@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.db.operations import (
     get_all_topics_by_user_id,
     get_topic_by_document_id,
+    get_topic_by_id,
     get_all_concepts_by_user_id,
     get_concept_by_id,
     get_all_relations_by_user_id,
@@ -22,6 +23,7 @@ from app.schemas.user import UserResponse as User
 from app.schemas.universe import (
     TopicNode,
     TopicResponse,
+    TopicDetailResponse,
     ConceptNode,
     NodeResponse,
     NodeDetailResponse,
@@ -73,6 +75,43 @@ async def get_universe_topics(
             status_code=500,
             detail="Internal server error"
         )
+    
+
+@router.get("/topic/{topic_id}", response_model=TopicDetailResponse)
+async def get_topic_detail(
+    topic_id: int,
+    db: Session = Depends(get_db)
+):
+    """API Route for extracting specific topic node data from backend
+
+    Input:
+
+    Ouput:
+    """
+    try:
+        topic = get_topic_by_id(db, topic_id)
+
+        if not topic:
+            raise HTTPException(
+                status_code=404,
+                detail="Topic not found"
+            )
+        
+        topic = topic[0]
+
+        return TopicDetailResponse(
+            id=topic["id"],
+            topic=topic["name"],
+            description=topic["description"]
+        )
+    except Exception as error:
+        logger.exception(
+            f"Unexpected error while extracting topic internal data due to {error}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
 
 @router.get("/nodes", response_model=NodeResponse)
@@ -92,12 +131,11 @@ async def get_universe_nodes(
 
         # Extract all concepts from db, project all coordinates, then format into ConceptNodes
         concepts = get_all_concepts_by_user_id(db, user["id"])
-        all_coordinates = await project_embeddings([json.loads(concept["embedding"]) for concept in concepts])
+        all_coordinates = await project_embeddings([json.loads(concept["embedding"]) for concept in concepts], dimensions)
         all_concepts = [
             ConceptNode(
                 id=concept["id"],
-                document_id=concept["document_id"],
-                topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
+                topic_id=concept["topic_id"],
                 coordinates=all_coordinates[id]
             ) for id, concept in enumerate(concepts)
         ]
@@ -209,9 +247,18 @@ async def get_relation_detail(
         logger.info(f"Extracting relation information for relation id '{relation_id}'")
         relation = get_relation_by_id(db, relation_id)
 
+        if not relation:
+            raise HTTPException(
+                status_code=404,
+                detail="Relation not found"
+            )
+        
+        relation = relation[0]
+
         return RelationDetailResponse(
             id=relation["id"],
             name=relation["name"],
+            weight=relation["weight"],
             description=relation["description"],
             explanation=relation["explanation"]
         )
