@@ -297,9 +297,21 @@ def get_all_concepts_by_user_id(db: Session, user_id: int):
     Ouput:
     """
     query = """
-        SELECT id, user_id, name, raw_text, embedding
+        SELECT DISTINCT ON (concepts.id)
+            concepts.id AS id,
+            concepts.user_id AS user_id,
+            concepts.name AS name,
+            concepts.embedding AS embedding,
+            topics.id AS topic_id
         FROM concepts
-        WHERE user_id = :user_id
+        LEFT JOIN documents_to_concepts
+            ON documents_to_concepts.concept_id = concepts.id
+        LEFT JOIN documents
+            ON documents.id = documents_to_concepts.document_id
+        LEFT JOIN topics
+            ON topics.id = documents.topic_id
+        WHERE concepts.user_id = :user_id
+        ORDER BY concepts.id
     """
     return execute_select(db, query, {"user_id": user_id})
 
@@ -344,7 +356,7 @@ def get_similar_concepts_by_concept_id(db: Session, user_id: int, concept_id: in
                 id,
                 name,
                 raw_text,
-                embedding <=> :embedding AS distance
+                embedding <=> CAST(:embedding AS vector) AS distance
             FROM concepts
             WHERE user_id = :user_id
                 AND id != :concept_id
@@ -377,7 +389,7 @@ def search_concepts_by_embedding(db: Session, user_id: int, query_embedding: lis
                 id,
                 name,
                 raw_text,
-                embedding <=> :query_embedding AS distance
+                embedding <=> CAST(:query_embedding AS vector) AS distance
             FROM concepts
             WHERE user_id = :user_id
         )

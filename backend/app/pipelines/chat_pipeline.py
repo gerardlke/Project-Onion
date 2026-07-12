@@ -33,7 +33,8 @@ async def process_chat_query(db, user_id: int, query: str, conversation_history:
     logger.info(f"RAG query for user {user_id}: '{query[:80]}...'")
 
     # Embed query
-    query_embedding = generate_embeddings(query)
+    query_embedding = await generate_embeddings([query])
+    query_embedding = query_embedding[0]
 
     # Retrieve nearest concepts for context
     retrieved_concepts = search_concepts_by_embedding(

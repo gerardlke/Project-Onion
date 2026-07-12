@@ -135,8 +135,7 @@ async def get_universe_nodes(
         all_concepts = [
             ConceptNode(
                 id=concept["id"],
-                document_id=concept["document_id"],
-                topic_id=get_topic_by_document_id(db, concept["document_id"])[0]["id"],
+                topic_id=concept["topic_id"],
                 coordinates=all_coordinates[id]
             ) for id, concept in enumerate(concepts)
         ]

@@ -17,9 +17,8 @@ from app.routes import (
     chat
 )
 
-# Warm up from llm and relationship service
+# Warm up llm
 from app.services.llm import llm_warm_up  # noqa: F401
-from app.services.relationship import _get_nli  # noqa: F401
 
 ### Set up configs
 from app.configs.config import RESET_DB

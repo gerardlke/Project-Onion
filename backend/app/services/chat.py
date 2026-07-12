@@ -14,8 +14,8 @@ def build_context_block(retrieved_concepts: list[dict]):
     Output:
     """
     if not retrieved_concepts:
-        return "No relevant concepts found in your notes."
-
+        return "No relevant concepts were found in the student's uploaded notes."
+    
     blocks = []
     for concept in retrieved_concepts:
         blocks.append(

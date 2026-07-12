@@ -16,8 +16,7 @@ class TopicDetailResponse(BaseModel):
 
 class ConceptNode(BaseModel):
     id: int
-    document_id: int
-    topic_id: int
+    topic_id: int | None
     coordinates: list[float]
 
 class NodeResponse(BaseModel):

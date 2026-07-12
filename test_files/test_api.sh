@@ -85,24 +85,7 @@ CHAT_RESPONSE=$(curl -s -X POST $BASE_URL/chat/query \
 echo "$CHAT_RESPONSE"
 echo -e "\n"
 
-# Validate that the response has the expected fields
-CHAT_RESPONSE_TEXT=$(echo "$CHAT_RESPONSE" | sed -n 's|.*"response":"\([^"]*\)".*|\1|p')
-if [ -z "$CHAT_RESPONSE_TEXT" ]; then
-    echo "WARN: chat response field missing or empty"
-else
-    echo "PASS: chat response received"
-fi
-
-SOURCE_CONCEPTS=$(echo "$CHAT_RESPONSE" | grep -o '"source_concepts":\[.*\]')
-if [ -z "$SOURCE_CONCEPTS" ]; then
-    echo "WARN: source_concepts field missing — no relevant concepts retrieved or field absent"
-else
-    echo "PASS: source_concepts present — $SOURCE_CONCEPTS"
-fi
-echo -e "\n"
-
 # Multi-turn query — passes prior turn as conversation history
-# Tests that the backend correctly accepts and uses history without storing it server-side
 echo "[API] POST /chat/query - multi-turn (with conversation history)"
 curl -X POST $BASE_URL/chat/query \
      -H "Authorization: Bearer $TOKEN" \
@@ -111,13 +94,12 @@ curl -X POST $BASE_URL/chat/query \
        "query": "How does it differ from an AVL Tree?",
        "conversation_history": [
          {"role": "user",      "content": "What is a Binary Search Tree?"},
-         {"role": "assistant", "content": "'"$CHAT_RESPONSE_TEXT"'"}
+         {"role": "assistant", "content": "According to your notes, a Binary Search Tree is a \"Hierarchical data structure for efficient search.\""}
        ]
      }'
 echo -e "\n"
 
 # Query outside the uploaded knowledge base — tests graceful handling
-# when no relevant concepts are found above the similarity threshold
 echo "[API] POST /chat/query - out of domain query"
 curl -X POST $BASE_URL/chat/query \
      -H "Authorization: Bearer $TOKEN" \

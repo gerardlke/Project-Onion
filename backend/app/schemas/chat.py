@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ChatMessage(BaseModel):
@@ -7,8 +7,15 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    query: str
+    query: str 
     conversation_history: list[ChatMessage] = []
+    
+    @field_validator("query")
+    @classmethod
+    def query_must_not_be_empty(cls, v):
+        if not v or not v.strip(): 
+            raise ValueError("Query must not be empty")
+        return v.strip()
 
 
 class ChatResponse(BaseModel):
