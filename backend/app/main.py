@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from app.db.database import (
     Base
 )
 from app.db.seed import seed_relation_types
+from app.db.session import ensure_pgvector_extension
 import app.db.models  # noqa: F401
 from app.routes import (
     admin,
@@ -44,7 +46,16 @@ async def lifespan(app: FastAPI):
     # Setting up database
     logger.info("Starting database...")
     if RESET_DB:
-        Base.metadata.drop_all(bind=engine)
+        logger.info("Resetting database schema...")
+        with engine.connect() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE"))
+            conn.execute(text("CREATE SCHEMA public"))
+            conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
+            conn.commit()
+        logger.info("Schema reset complete")
+    
+    ensure_pgvector_extension()
+    
     Base.metadata.create_all(bind=engine)
 
     # Seed static data

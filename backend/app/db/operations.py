@@ -411,8 +411,8 @@ def update_concept_embedding(db: Session, concept_id: int, embedding: list):
     """Update the embedding for a concept after its raw_text was merged
 
     Input:
-        - concept_id:   id of the concept to update
-        - embedding:    newly generated embedding vector
+        concept_id: id of the concept to update
+        embedding: newly generated embedding vector
 
     Output: updated concept row
     """
