@@ -1,3 +1,6 @@
+import re
+import json
+
 from app.services.embed import generate_embeddings
 from app.services.chat import build_prompt
 from app.services.llm import generate
@@ -59,15 +62,31 @@ async def process_chat_query(db, user_id: int, query: str, conversation_history:
 
     # Generate response
     response = await generate(
-        messages=messages,      # TODO: generate() needs updating
-        max_new_tokens=512,
+        messages=messages,      
+        max_new_tokens=600,
         temperature=0.3  # slight temperature for natural conversation
     )
+
+    # Strip markdown fences if model wraps output
+    raw = re.sub(r"^```(?:json)?\s*", "", raw.strip())
+    raw = re.sub(r"\s*```$", "", raw)
+
+    try:
+        parsed = json.loads(raw)
+        response = parsed.get("response", raw)
+        citations = parsed.get("citations", [])
+        knowledge_gaps = parsed.get("knowledge_gaps", [])
+    except (json.JSONDecodeError, KeyError):
+        logger.warning("Chat response was not valid JSON — returning raw text")
+        response = raw
+        citations = knowledge_gaps = []
 
     logger.info(f"RAG response generated for user {user_id}")
 
     return {
         "response": response,
+        "citations":      citations,        # [{concept, quote}]
+        "knowledge_gaps": knowledge_gaps,   # [concept name strings]
         "source_concepts": [
             {"id": c["id"], "name": c["name"]}
             for c in retrieved_concepts
