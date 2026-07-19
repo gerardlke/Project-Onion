@@ -61,7 +61,7 @@ async def process_chat_query(db, user_id: int, query: str, conversation_history:
     )
 
     # Generate response
-    response = await generate(
+    raw = await generate(
         messages=messages,      
         max_new_tokens=600,
         temperature=0.3  # slight temperature for natural conversation

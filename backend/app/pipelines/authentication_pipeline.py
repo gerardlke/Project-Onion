@@ -1,7 +1,7 @@
 import os
 import jwt
 from dotenv import load_dotenv
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -29,10 +29,21 @@ async def get_current_user(
     payload = jwt.decode(
         token,
         os.getenv("JWT_SECRET_KEY"),
-        algorithms=[
-            os.getenv("JWT_ALGORITHM")
-        ]
+        algorithms=[os.getenv("JWT_ALGORITHM")]
     )
-    user_id = payload["sub"]
+    user_id = payload.get("sub")
+    
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Unable to decode user token"
+        )
+
     user = get_user_by_id(db, int(user_id))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
+        )
+        
     return user[0]
