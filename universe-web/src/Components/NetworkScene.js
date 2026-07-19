@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 
 import NetworkNode from './NetworkNodes';
 import { createConceptNode, getTopicColor } from '../Data/network.js';
-
-// TODO: import NetworkEdge once you build that component
 
 
 export default function NetworkScene({
@@ -44,12 +43,16 @@ export default function NetworkScene({
     return () => { cancelled = true; };
   }, [conceptNodes, topics]);
 
+  const nodePositionById = Object.fromEntries(
+    visibleNodes.map((n) => [n.id, n.position])
+  );
+
   return (
     <Canvas 
       camera={{ position: [0, 0, 7], fov: 60 }}
       gl={{ alpha: true }}
       style={{ background: 'transparent' }}
-  >
+    >
       <ambientLight intensity={0.6} />
       <pointLight position={[10, 10, 10]} />
 
@@ -63,6 +66,28 @@ export default function NetworkScene({
           setActiveNode={setActiveNode}
         />
       ))}
+
+      {/* Render one tube per edge between two concept nodes */}
+      {edges.map((edge) => {
+        const fromPos = nodePositionById[edge.source_id];
+        const toPos = nodePositionById[edge.target_id];
+        if (!fromPos || !toPos) return null;
+
+        const from = new THREE.Vector3(...fromPos);
+        const to = new THREE.Vector3(...toPos);
+        const curve = new THREE.LineCurve3(from, to);
+
+        return (
+          <mesh key={`${edge.source_id}-${edge.target_id}`}>
+            <tubeGeometry args={[curve, 8, 0.04, 6, false]} />
+            <meshStandardMaterial
+              color="white"
+              opacity={0.35}
+              transparent
+            />
+          </mesh>
+        );
+      })}
 
       {/* OrbitControls is scoped to this canvas, so page layout remains stable. */}
       <OrbitControls enableZoom makeDefault />

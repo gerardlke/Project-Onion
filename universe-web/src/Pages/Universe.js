@@ -54,7 +54,7 @@ export default function Universe() {
 
       setTopics(uniqueTopics || []);
       setConceptNodes(nodesResult.nodes || []);
-      setEdges(relationsResult.relations || []);
+      setEdges(relationsResult.edges || []);
       
     } catch {
       setError('Universe service is unavailable. Please try again later.');
