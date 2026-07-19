@@ -1,7 +1,14 @@
 import { useState } from "react";
 
 
-export default function NetworkNode({ position, color, data, activeNode, setActiveNode }) {
+export default function NetworkNode({ 
+  position, 
+  color, 
+  radius = 0.4,
+  data, 
+  activeNode, 
+  setActiveNode 
+}) {
   const [hovered, setHover] = useState(false);
   const isOpen = activeNode?.id === data.id;
 
@@ -12,8 +19,8 @@ export default function NetworkNode({ position, color, data, activeNode, setActi
       onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
       onPointerOut={() => setHover(false)}
     >
-      <sphereGeometry args={[data.radius, 32, 32]} />
-      <meshStandardMaterial color={(isOpen || hovered) ? '#ffaa00' : color} />
+      <sphereGeometry args={[radius, 32, 32]} />
+      <meshStandardMaterial color={(isOpen || hovered) ? '#fff065' : color} />
     </mesh>
   );
 }

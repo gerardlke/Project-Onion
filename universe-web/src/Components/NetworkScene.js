@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
 
 import NetworkNode from './NetworkNodes';
+import NetworkEdge from './NetworkEdge';
+
 import { createConceptNode, getTopicColor } from '../Data/network.js';
 
 
@@ -11,8 +12,12 @@ export default function NetworkScene({
   topics = [],
   conceptNodes = [],
   edges = [],
+  universeScale = 1,
+  nodeScale = 1,
   activeNode,
   setActiveNode,
+  activeEdge,
+  setActiveEdge,
   onProcessingChange
 }) {
   const [visibleNodes, setVisibleNodes] = useState([]);
@@ -43,8 +48,14 @@ export default function NetworkScene({
     return () => { cancelled = true; };
   }, [conceptNodes, topics]);
 
+  const scaledNodes = visibleNodes.map((node) => ({
+    ...node,
+    position: node.position.map((v) => v * universeScale),
+    radius: (node.radius ?? 0.4) * nodeScale,
+  }));
+
   const nodePositionById = Object.fromEntries(
-    visibleNodes.map((n) => [n.id, n.position])
+    scaledNodes.map((n) => [n.id, n.position])
   );
 
   return (
@@ -56,36 +67,36 @@ export default function NetworkScene({
       <ambientLight intensity={0.6} />
       <pointLight position={[10, 10, 10]} />
 
-      {visibleNodes.map((node) => (
+      {scaledNodes.map((node) => (
         <NetworkNode
           key={node.id}
           position={node.position}
           color={node.color}
+          radius={node.radius}
           data={node}
           activeNode={activeNode}
           setActiveNode={setActiveNode}
         />
       ))}
-
+      
       {/* Render one tube per edge between two concept nodes */}
       {edges.map((edge) => {
         const fromPos = nodePositionById[edge.source_id];
         const toPos = nodePositionById[edge.target_id];
         if (!fromPos || !toPos) return null;
 
-        const from = new THREE.Vector3(...fromPos);
-        const to = new THREE.Vector3(...toPos);
-        const curve = new THREE.LineCurve3(from, to);
+        const isActive = activeEdge?.source_id === edge.source_id &&
+                         activeEdge?.target_id === edge.target_id;
 
         return (
-          <mesh key={`${edge.source_id}-${edge.target_id}`}>
-            <tubeGeometry args={[curve, 8, 0.04, 6, false]} />
-            <meshStandardMaterial
-              color="white"
-              opacity={0.35}
-              transparent
-            />
-          </mesh>
+          <NetworkEdge
+            key={`${edge.source_id}-${edge.target_id}`}
+            edge={edge}
+            fromPos={fromPos}
+            toPos={toPos}
+            isActive={isActive}
+            onClickEdge={() => setActiveEdge(isActive ? null : edge)}
+          />
         );
       })}
 
