@@ -29,6 +29,13 @@ curl -X POST $BASE_URL/upload/new_topic \
      -d '{"name": "CS1101s", "description": "Programming Methodology 1"}'
 echo -e "\n"
 
+echo "[API] POST /upload/new_topic"
+curl -X POST $BASE_URL/upload/new_topic \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"name": "CS2040s", "description": "Data Structures and Algorithms"}'
+echo -e "\n"
+
 echo "[API] GET /upload/get_topics"
 curl -X GET $BASE_URL/upload/get_topics -H "Authorization: Bearer $TOKEN"
 echo -e "\n"
@@ -36,15 +43,15 @@ echo -e "\n"
 echo "[API] POST /upload/new_document - small notes"
 curl -X POST $BASE_URL/upload/new_document \
      -H "Authorization: Bearer $TOKEN" \
-     -F "file=@test_files/notes_small.txt" \
+     -F "file=@test_files/CS1101s.txt" \
      -F "topic_name=CS1101s"
 echo -e "\n"
 
 echo "[API] POST /upload/new_document - big notes"
 curl -X POST $BASE_URL/upload/new_document \
      -H "Authorization: Bearer $TOKEN" \
-     -F "file=@test_files/note_big.txt" \
-     -F "topic_name=CS1101s"
+     -F "file=@test_files/CS2040s.txt" \
+     -F "topic_name=CS2040s"
 echo -e "\n"
 
 echo "===== 3. UNIVERSE API ====="

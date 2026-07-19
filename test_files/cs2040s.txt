@@ -1,0 +1,65 @@
+# CS2040S: Data Structures and Algorithms
+
+## Sorting Algorithms
+
+Merge Sort is a divide-and-conquer sorting algorithm that recursively splits an array into halves, sorts each half, and merges them in O(n log n) time. It is stable and works well for linked lists, but requires O(n) auxiliary space.
+
+Quick Sort selects a pivot element and partitions the array so that elements smaller than the pivot come before it and larger elements after. It runs in O(n log n) average time but O(n²) worst case. In-place partitioning gives it better cache performance than Merge Sort in practice.
+
+Counting Sort is a non-comparison sorting algorithm that counts the frequency of each element and uses prefix sums to place elements in their correct output position. It runs in O(n + k) time where k is the value range, making it faster than comparison sorts when k is small.
+
+## Binary Search Trees
+
+A Binary Search Tree is a hierarchical data structure where each node has at most two children. For any node, all values in its left subtree are strictly smaller and all values in its right subtree are strictly larger, enabling O(log n) search, insertion, and deletion on balanced trees.
+
+BST Insertion traverses the tree following the ordering property until an empty position is found, then attaches a new leaf node. The order of insertions determines the tree shape, with sorted insertions producing a degenerate linear chain with O(n) operations.
+
+BST Deletion handles three cases: leaf removal, single-child replacement, and two-child replacement using the in-order successor — the smallest value in the right subtree — to preserve the BST ordering property.
+
+## AVL Trees
+
+An AVL Tree is a self-balancing BST where the balance factor of every node — defined as the height difference between left and right subtrees — is maintained within {-1, 0, +1} at all times.
+
+AVL Rotations restore balance when an insertion or deletion causes a balance factor of +2 or -2. A Left Rotation handles right-heavy imbalance by promoting the right child, while a Right Rotation handles left-heavy imbalance by promoting the left child.
+
+Left-Right and Right-Left Double Rotations handle inner-subtree imbalances where a single rotation is insufficient. A double rotation applies two consecutive single rotations, first on the child and then on the unbalanced node.
+
+## Hashing
+
+A Hash Table stores key-value pairs and supports average O(1) insertion, deletion, and lookup. A hash function maps keys to indices in an underlying array. Good hash functions distribute keys uniformly to minimise collisions.
+
+Collision Resolution handles cases where two keys hash to the same index. Separate Chaining stores colliding elements in a linked list at each bucket. Open Addressing probes for the next available slot using linear probing, quadratic probing, or double hashing.
+
+Load Factor is the ratio of stored elements to table capacity. As the load factor increases, collision probability rises and performance degrades. Hash tables typically resize and rehash when the load factor exceeds a threshold such as 0.75.
+
+## Heaps and Priority Queues
+
+A Binary Heap is a complete binary tree satisfying the heap property: in a max-heap, every node's value is greater than or equal to its children's values; in a min-heap, every node's value is less than or equal to its children. Heaps support O(log n) insertion and O(log n) extraction of the maximum or minimum.
+
+A Priority Queue is an abstract data type where each element has a priority and the highest-priority element is always dequeued first. Binary heaps are the standard implementation, enabling efficient scheduling, Dijkstra's algorithm, and Huffman coding.
+
+Heapify builds a valid heap from an unsorted array in O(n) time by applying sift-down from the last internal node upward, which is more efficient than inserting elements one at a time in O(n log n).
+
+## Graph Algorithms
+
+Breadth First Search explores a graph level by level using a queue, visiting all neighbours of the current node before going deeper. BFS runs in O(V + E) time and finds shortest paths in unweighted graphs since nodes are visited in order of increasing distance from the source.
+
+Depth First Search explores a graph by going as deep as possible along each branch before backtracking, using a stack or recursion. DFS runs in O(V + E) time and is used for cycle detection, topological sorting, and finding strongly connected components.
+
+Topological Sort produces a linear ordering of vertices in a directed acyclic graph (DAG) such that for every directed edge u → v, u appears before v. Kahn's algorithm uses BFS with in-degree tracking, while the DFS-based approach reverses the finish-time order.
+
+Dijkstra's Algorithm finds single-source shortest paths in graphs with non-negative edge weights. It maintains a min-heap priority queue of vertices ordered by tentative distance, relaxing outgoing edges of the extracted minimum vertex at each step. It runs in O((V + E) log V) with a binary heap.
+
+Bellman-Ford Algorithm finds single-source shortest paths even when negative edge weights are present, by relaxing all edges V-1 times. A V-th relaxation pass detects negative cycles. It runs in O(VE), making it slower than Dijkstra for non-negative graphs.
+
+## Dynamic Programming
+
+Dynamic Programming solves problems with overlapping subproblems and optimal substructure by storing solutions to subproblems to avoid redundant recomputation. It transforms exponential-time recursion into polynomial-time computation.
+
+Memoization is a top-down DP technique that wraps a recursive function with a cache, storing each subproblem's result on first computation and returning the cached value on subsequent calls.
+
+Tabulation is a bottom-up DP technique that fills a table from the smallest subproblems upward, avoiding recursion overhead and typically improving cache performance over memoization.
+
+Longest Common Subsequence finds the longest sequence of characters appearing in both strings in the same relative order. The recurrence is LCS(i,j) = 1 + LCS(i-1,j-1) if characters match, else max(LCS(i-1,j), LCS(i,j-1)), running in O(mn) time and space.
+
+0/1 Knapsack selects items with given weights and values to maximise total value within a weight capacity, where each item is either fully included or excluded. The recurrence dp[i][w] = max(dp[i-1][w], dp[i-1][w-weight[i]] + value[i]) builds the solution bottom-up in O(nW) time.
