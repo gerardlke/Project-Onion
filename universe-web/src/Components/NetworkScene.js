@@ -26,7 +26,7 @@ export default function NetworkScene({
       try {
         const nodes = await Promise.all(
           conceptNodes.map((concept) =>
-            createConceptNode(concept, getTopicColor(concept.topic_name, topics))
+            createConceptNode(concept, getTopicColor(concept.topic_id, topics))
           )
         );
         if (!cancelled) setVisibleNodes(nodes);

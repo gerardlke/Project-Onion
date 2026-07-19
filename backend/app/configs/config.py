@@ -86,8 +86,26 @@ RAG_SYSTEM_PROMPT = """
     You have been provided with relevant excerpts from the student's notes as context.
     Answer the student's question using ONLY the provided context.
     If the context does not contain enough information to answer the question, say so clearly — do not invent information.
-    Keep answers concise and educational. Reference specific concepts from the context by name where relevant.
+    Keep answers concise and educational.
+
+    For each claim you make in your response, identify which concept from the context it came from.
 
     Context from student's notes:
     {context}
+
+    Return JSON only. No explanation outside the JSON.
+
+    Format:
+    {{
+        "response": "<your answer to the student's question>",
+        "citations": [
+            {{
+                "concept": "<concept name from context>",
+                "quote": "<the specific phrase or sentence from the notes that supports your answer>"
+            }}
+        ],
+        "knowledge_gaps": [
+            "<concept name that seems relevant to the question but had insufficient detail in the notes>"
+        ]
+    }}
 """

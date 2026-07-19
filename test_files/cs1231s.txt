@@ -1,0 +1,35 @@
+# CS1231S: Discrete Structures
+
+## Logic and Proofs
+
+Propositional Logic studies statements that are either true or false, combined using logical connectives such as AND, OR, NOT, implication, and biconditional to form compound propositions.
+
+A Proof by Induction establishes that a property holds for all natural numbers by proving a base case and then proving that if the property holds for n, it holds for n+1, known as the inductive step.
+
+Proof by Contradiction assumes the negation of the statement to be proved, then derives a logical contradiction, concluding the original statement must be true.
+
+## Sets and Functions
+
+A Set is an unordered collection of distinct elements. Set operations include union, intersection, difference, and complement, which together form the basis of Boolean algebra used in digital logic.
+
+A Function maps each element of a domain to exactly one element of a codomain. Functions can be injective (one-to-one), surjective (onto), or bijective (both), with bijections establishing that two sets have the same cardinality.
+
+Pigeonhole Principle states that if n items are placed into fewer than n containers, at least one container must hold more than one item, enabling elegant combinatorial proofs about collisions and distributions.
+
+## Graph Theory
+
+A Graph consists of a set of vertices and edges connecting pairs of vertices. Graphs can be directed or undirected, weighted or unweighted, and may contain cycles or be acyclic.
+
+A Tree is a connected, acyclic undirected graph. A rooted tree designates one vertex as the root, giving each node a natural parent-child relationship that underlies data structures like Binary Search Trees and heaps.
+
+Graph Connectivity refers to whether a path exists between every pair of vertices. A connected component is a maximal subgraph where all vertices are reachable from each other.
+
+Eulerian Path traverses every edge of a graph exactly once. An Eulerian circuit additionally returns to the starting vertex. A graph has an Eulerian circuit if and only if every vertex has even degree.
+
+## Combinatorics and Probability
+
+The Multiplication Principle states that if a task can be done in m ways and a second independent task in n ways, together they can be done in m × n ways, forming the foundation of counting arguments.
+
+Permutations count ordered arrangements of k elements chosen from n distinct elements, given by n! / (n-k)!, while Combinations count unordered selections, given by n! / (k! × (n-k)!).
+
+Conditional Probability defines the probability of event A given that event B has occurred as P(A|B) = P(A ∩ B) / P(B), enabling reasoning about dependent events and Bayesian inference.

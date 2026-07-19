@@ -26,7 +26,7 @@ _hf_client = InferenceClient(
 # Local encoder
 _encoder = None
 
-async def _get_encoder():
+def _get_encoder():
     """Lazily load encoder on first call, then reuse"""
     global _encoder
     if _encoder is not None:
@@ -43,7 +43,7 @@ async def _get_encoder():
 async def encoder_warm_up():
     """Pre-load the encoder into memory during application startup before first call"""
     logger.info("Warming up encoder...")
-    await _get_encoder()
+    _get_encoder()
     logger.info("Encoder warm-up complete")
 
 

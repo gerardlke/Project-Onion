@@ -18,7 +18,14 @@ class ChatRequest(BaseModel):
         return v.strip()
 
 
+class Citation(BaseModel):
+    concept: str
+    quote:   str
+
+    
 class ChatResponse(BaseModel):
     response: str
+    citations: list[Citation]
+    knowledge_gaps: list[str]
     source_concepts: list[dict]
     context_found: bool
