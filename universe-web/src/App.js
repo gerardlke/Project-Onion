@@ -11,6 +11,7 @@ import Universe from './Pages/Universe';
 
 import Sidebar from './Components/Sidebar';
 import UserIconButton from './Components/UserIconButton';
+import AiChatBot from './Components/AiChatBot';
 
 /**
  * Root application component.
@@ -72,6 +73,7 @@ function App() {
             username={loggedInUser}
             onLogout={handleLogout}
           />
+          <AiChatBot />
         </>
       )}
       
