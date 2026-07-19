@@ -39,6 +39,8 @@ export default function Universe() {
       const nodesResult = await nodesResponse.json();
       const relationsResult = await relationsResponse.json();
 
+      console.log("RELATIONS RESULTS", relationsResult);
+
       // Normalizing topics response
       const topicsResult = await topicsResponse.json();
       function normalizeTopic(topic) {

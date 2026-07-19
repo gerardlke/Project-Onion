@@ -32,6 +32,8 @@ class RelationEdge(BaseModel):
     source_id: int 
     target_id: int
     name: str
+    explanation: str
+    weight: float
 
 class RelationResponse(BaseModel):
     edges: list[RelationEdge]

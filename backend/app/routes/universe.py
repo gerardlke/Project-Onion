@@ -213,7 +213,9 @@ async def get_universe_relations(
                 id=relation["relation_id"],
                 source_id=relation["source_id"],
                 target_id=relation["target_id"],
-                name=relation["name"]
+                name=relation["name"],
+                explanation=relation["explanation"],
+                weight=relation["weight"]
             ) for relation in relations
         ]
 

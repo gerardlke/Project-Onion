@@ -459,7 +459,9 @@ def get_all_relations_by_user_id(db: Session, user_id: int):
             relations.id AS relation_id,
             relations.source_id,
             relations.target_id,
-            rt.name
+            rt.name,
+            relations.explanation AS explanation,
+            relations.weight AS weight
         FROM relations
         JOIN relation_types rt ON relations.relation_type_id = rt.id
         JOIN concepts sc ON relations.source_id = sc.id
