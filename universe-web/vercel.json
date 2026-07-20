@@ -2,15 +2,15 @@
   "rewrites": [
     {
       "source": "/user/:path*",
-      "destination": "https://your-backend-url.railway.app/user/:path*"
+      "destination": "https://project-onion.gkbmdwg9dkdbcedm.malaysiawest.azurecontainer.io.net/user/:path*"
     },
     {
       "source": "/upload/:path*",
-      "destination": "https://your-backend-url.railway.app/upload/:path*"
+      "destination": "https://project-onion.gkbmdwg9dkdbcedm.malaysiawest.azurecontainer.io.net/upload/:path*"
     },
     {
       "source": "/universe/:path*",
-      "destination": "https://your-backend-url.railway.app/universe/:path*"
+      "destination": "http://project-onion.gkbmdwg9dkdbcedm.malaysiawest.azurecontainer.io.net/universe/:path*"
     },
     {
       "source": "/(.*)",
