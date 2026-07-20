@@ -46,7 +46,7 @@ export default function NetworkScene({
       onProcessingChange?.(false);
     }
     return () => { cancelled = true; };
-  }, [conceptNodes, topics]);
+  }, [conceptNodes, topics, onProcessingChange]);
 
   const scaledNodes = visibleNodes.map((node) => ({
     ...node,
