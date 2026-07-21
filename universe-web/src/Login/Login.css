@@ -1,104 +1,225 @@
-.login-form {
+/* Page wrapper */
+.auth-page {
+  align-items: center;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+  gap: 32px;
+}
+
+/* Wordmark / logo above the card */
+.auth-wordmark {
+  color: transparent;
+
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.4) 0%,
+    rgba(165,180,252,0.9) 30%,
+    rgba(103,232,249,0.95) 55%,
+    rgba(165,180,252,0.9) 75%,
+    rgba(255,255,255,0.4) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  display: block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.30em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  animation: auth-fade-down 0.5s ease both wordmark-shimmer 4s linear 0.5s infinite;
+}
+
+@keyframes wordmark-shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* Glass card */
+.auth-card {
+  animation: auth-fade-up 0.5s ease both;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 420px;
+  padding: 44px 40px 40px;
+  width: 100%;
+}
+
+/* Card header */
+.auth-card-header {
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.auth-card-eyebrow {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.14em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.auth-card-title {
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Field groups */
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+.auth-label {
   align-items: center;
-  background-color: #171e35;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
-  max-width: 400px;
-  padding: 42px 34px 36px;
-  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  font-weight: bold;
+  gap: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.login-form h2 {
+.auth-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
   color: white;
   font-family: 'Courier New', Courier, monospace;
-  margin: 0 0 24px;
+  font-size: 14px;
+  outline: none;
+  padding: 12px 14px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.login-form label {
-  align-self: stretch;
-  margin-bottom: 8px;
-  color: white;
-  font-family: 'Courier New', Courier, monospace;
+.auth-input:focus {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(99, 120, 255, 0.65);
 }
 
-.login-form input {
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 4px;
-  align-self: stretch;
-  margin-bottom: 16px;
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.22);
 }
 
-.login-form button {
-  padding: 12px 24px;
-  background-color: white;
-  color: black;
-  border: none;
+/* Validation icons */
+.auth-valid { color: #22c55e; }
+.auth-invalid { color: #f87171; }
+
+/* Instruction hint */
+.auth-hint {
+  animation: auth-fade-up 0.18s ease both;
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 8px;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 6px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+/* Error message */
+.auth-error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+/* Primary CTA button */
+.auth-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.35);
+  color: white;
   cursor: pointer;
-  font: inherit;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
   font-weight: bold;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+  padding: 14px;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
 }
 
-.login-form button:disabled {
+.auth-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 28px rgba(79, 70, 229, 0.5);
+  transform: translateY(-1px);
+}
+
+.auth-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.45;
+  transform: none;
 }
 
-.register-link {
-  color: white;
-  font-size: 16px;
-  margin: 18px 0 0;
+/* Footer link */
+.auth-footer {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  margin: 22px 0 0;
+  text-align: center;
 }
 
-.register-link a {
-  color: white;
+.auth-footer a {
+  color: rgba(165, 180, 252, 0.9);
   font-weight: bold;
+  text-decoration: none;
+  transition: color 0.15s;
 }
 
-.valid {
-  color: #22c55e;
-  margin-left: 8px;
+.auth-footer a:hover {
+  color: white;
 }
 
-.invalid {
-  color: #f87171;
-  margin-left: 8px;
-}
-
-.hide {
-  display: none;
-}
-
+/* Offscreen accessibility helper */
 .offscreen {
   left: -9999px;
   position: absolute;
 }
 
-.instructions,
-.errmsg {
-  align-self: stretch;
-  border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
-  margin: -8px 0 16px;
-  padding: 10px;
-  text-align: left;
+/* Animations */
+@keyframes auth-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.instructions {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: white;
-}
-
-.instructions svg {
-  margin-right: 6px;
-}
-
-.errmsg {
-  background-color: rgba(248, 113, 113, 0.18);
-  border: 1px solid rgba(248, 113, 113, 0.65);
-  color: #fecaca;
+@keyframes auth-fade-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

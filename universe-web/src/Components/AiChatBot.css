@@ -1,8 +1,8 @@
 .ai-chatbot {
   bottom: 22px;
+  left: 22px;
   pointer-events: none;
   position: fixed;
-  right: 22px;
   z-index: 3600;
 }
 
@@ -50,13 +50,13 @@
   flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
   height: min(620px, calc(100vh - 116px));
+  left: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
   position: absolute;
-  right: 0;
   transform: translateY(14px) scale(0.98);
-  transform-origin: bottom right;
+  transform-origin: bottom left;
   transition: opacity 0.2s ease, transform 0.2s ease;
   width: min(380px, calc(100vw - 32px));
 }
@@ -288,7 +288,7 @@
 @media (max-width: 520px) {
   .ai-chatbot {
     bottom: 16px;
-    right: 16px;
+    left: 16px;
   }
 
   .ai-chatbot-panel {

@@ -73,7 +73,6 @@ function App() {
             username={loggedInUser}
             onLogout={handleLogout}
           />
-          <AiChatBot />
         </>
       )}
       
@@ -95,10 +94,7 @@ function App() {
         <Route
           path="/login"
           element={loggedInUser ? <Navigate to="/" replace /> : (
-            <div className="app login-page">
-              <h1>Welcome to Project Onion!</h1>
-              <Login onLogin={setLoggedInUser} />
-            </div>
+            <Login onLogin={setLoggedInUser} />
           )}
         />
 

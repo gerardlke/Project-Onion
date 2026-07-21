@@ -1,9 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../Api';
 
 import './Upload.css';
 
+function TopicDropdown({ topics, selectedTopic, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [open]);
+
+  const selectedLabel = topics.find((t) => t.name === selectedTopic)?.name
+    || 'No topics yet — create one below';
+
+  return (
+    <div className="topic-dropdown" ref={ref}>
+      {/* Selected slot — always visible, click to open */}
+      <button
+        type="button"
+        className={`topic-dropdown-selected ${open ? 'topic-dropdown-selected--open' : ''}`}
+        onClick={() => topics.length > 0 && setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        <span>{selectedLabel}</span>
+        <svg
+          className={`topic-dropdown-chevron ${open ? 'topic-dropdown-chevron--open' : ''}`}
+          width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* Animated options panel */}
+      <div className={`topic-dropdown-panel ${open ? 'topic-dropdown-panel--open' : ''}`} role="listbox">
+        {topics.map((t) => (
+          <button
+            key={t.name}
+            type="button"
+            role="option"
+            aria-selected={t.name === selectedTopic}
+            className={`topic-dropdown-option ${t.name === selectedTopic ? 'topic-dropdown-option--active' : ''}`}
+            onClick={() => { onSelect(t.name); setOpen(false); }}
+          >
+            <span className="topic-dropdown-option-name">{t.name}</span>
+            {t.description && (
+              <span className="topic-dropdown-option-desc">{t.description}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Upload({ loggedInUser, onLogout }) {
   const navigate = useNavigate();
@@ -160,113 +217,137 @@ export default function Upload({ loggedInUser, onLogout }) {
   const isUploading = Object.values(uploadingTopics).some(Boolean);
 
   return (
-    <div className="app">
-      {/* Full screen loading overlay*/}
+    <div className="upload-page">
+
+      {/* Loading overlay — unchanged */}
       {uploadProgress !== null && (
         <div className="upload-overlay">
           <div className="upload-progress-card">
             <p className="upload-progress-message">{uploadProgress.message}</p>
             <div className="upload-progress-track">
-              <div
-                className="upload-progress-fill"
-                style={{ width: `${uploadProgress.percent}%` }}
-              />
+              <div className="upload-progress-fill" style={{ width: `${uploadProgress.percent}%` }} />
             </div>
             <p className="upload-progress-percent">{uploadProgress.percent}%</p>
           </div>
         </div>
       )}
 
-      <section className="page-content">
-        <h1>Project Onion</h1>
-        <p>Choose a topic and upload documents to grow your semantic universe.</p>
-      </section>
+      {/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          Page header — clean wordmark + subtitle
+      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */}
+      <div className="upload-header">
+        <p className="upload-wordmark">Project Onion</p>
+        <h1 className="upload-title">Your Knowledge Universe</h1>
+        <p className="upload-subtitle">
+          Organise your notes into topics and upload documents to grow your semantic universe.
+        </p>
+      </div>
 
-      <section className="topic-panel" aria-label="Upload document">
-        <div className="topic-row">
-          <div className="topic-select-label">
-            <label htmlFor="topic-select">Topic</label>
-            <select
-              id="topic-select"
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-              disabled={topics.length === 0}
-            >
-              {topics.length === 0
-                ? <option>No topics yet</option>
-                : topics.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)
-              }
-            </select>
-          </div>
+      {/* Main glass card */}
+      <div className="upload-card">
 
-          {/* New Topic button to open topic card */}
+        {/* Topic selector row */}
+        <div className="upload-field-label">Topic</div>
+        <div className="upload-topic-row">
+          <TopicDropdown
+            topics={topics}
+            selectedTopic={selectedTopic}
+            onSelect={setSelectedTopic}
+          />
+
+          {/* New Topic button */}
           <button
-            className="new-topic-btn"
+            className="upload-new-topic-btn"
             onClick={() => { setTopicMessage(''); setShowNewTopicCard(true); }}
+            type="button"
           >
-            + New Topic
+            + New
           </button>
         </div>
 
-        {topics.length > 0 && (
-          <label className="upload-button">
-            {isUploading ? 'Uploading…' : 'Upload Document'}
-            <input
-              className="file-input"
-              type="file"
-              onChange={handleUploadDocument}
-              disabled={isUploading}
-            />
-          </label>
-        )}
+        {/* Divider */}
+        <div className="upload-divider" />
 
+        {/* Upload document section */}
+        <div className="upload-field-label">Document</div>
+        <label className={`upload-file-btn ${isUploading || topics.length === 0 ? 'upload-file-btn--disabled' : ''}`}>
+          {isUploading ? 'Uploading…' : 'Choose File to Upload'}
+          <input
+            className="file-input"
+            type="file"
+            onChange={handleUploadDocument}
+            disabled={isUploading || topics.length === 0}
+          />
+        </label>
+
+        {/* Status messages per topic */}
         {Object.entries(uploadMessages).map(([topic, message]) =>
           message ? (
-            <p key={topic} className="status-message">
-              <strong>{topic}:</strong> {message}
+            <p key={topic} className="upload-status-msg">
+              <span className="upload-status-topic">{topic}</span> {message}
             </p>
           ) : null
         )}
-      </section>
 
-      <button className="upload-button" onClick={() => navigate('/universe')}>
+        {/* Topic message (creation feedback) */}
+        {topicMessage && (
+          <p className="upload-status-msg">{topicMessage}</p>
+        )}
+      </div>
+
+      {/* View Universe CTA */}
+      <button className="upload-cta-btn" onClick={() => navigate('/universe')}>
         View Universe →
       </button>
 
-      {/* New Topic card that appears over page */}
+      {/* New Topic modal */}
       {showNewTopicCard && (
-        <div className="popup-overlay" role="dialog" aria-modal="true" aria-label="Create new topic">
-          <div className="popup new-topic-card">
-            <button
-              className="popup-close"
-              onClick={() => setShowNewTopicCard(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h2>New Topic</h2>
-            <p>Give your topic a name and a short description.</p>
-            <form className="new-topic-form" onSubmit={handleCreateTopic}>
-              <label htmlFor="topic-name">Name</label>
-              <input
-                id="topic-name"
-                type="text"
-                value={newTopicName}
-                onChange={(e) => setNewTopicName(e.target.value)}
-                placeholder="e.g. CS1101s"
-                required
-              />
-              <label htmlFor="topic-desc">Description</label>
-              <input
-                id="topic-desc"
-                type="text"
-                value={newTopicDescription}
-                onChange={(e) => setNewTopicDescription(e.target.value)}
-                placeholder="e.g. Programming Methodology 1"
-                required
-              />
-              {topicMessage && <p className="status-message">{topicMessage}</p>}
-              <button type="submit" className="upload-button popup-upload-button">
+        <div className="upload-modal-overlay" role="dialog" aria-modal="true">
+          <div className="upload-modal-card">
+            <div className="upload-modal-header">
+              <div>
+                <p className="upload-modal-eyebrow">New Topic</p>
+                <h2 className="upload-modal-title">Create a topic</h2>
+              </div>
+              <button
+                className="upload-modal-close"
+                onClick={() => setShowNewTopicCard(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTopic}>
+              <div className="upload-modal-field">
+                <label className="upload-field-label" htmlFor="topic-name">Name</label>
+                <input
+                  id="topic-name"
+                  className="upload-input"
+                  type="text"
+                  value={newTopicName}
+                  onChange={(e) => setNewTopicName(e.target.value)}
+                  placeholder="e.g. CS2040S"
+                  required
+                />
+              </div>
+
+              <div className="upload-modal-field">
+                <label className="upload-field-label" htmlFor="topic-desc">Description</label>
+                <input
+                  id="topic-desc"
+                  className="upload-input"
+                  type="text"
+                  value={newTopicDescription}
+                  onChange={(e) => setNewTopicDescription(e.target.value)}
+                  placeholder="e.g. Data Structures and Algorithms"
+                  required
+                />
+              </div>
+
+              {topicMessage && <p className="upload-status-msg">{topicMessage}</p>}
+
+              <button type="submit" className="upload-cta-btn upload-cta-btn--modal">
                 Create Topic
               </button>
             </form>

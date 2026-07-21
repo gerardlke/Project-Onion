@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   padding: 28px 0 24px;
-  z-index: 200;
+  z-index: 4000;
 
   /* Hidden off-screen by default */
   transform: translateX(-100%);
@@ -26,7 +26,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 199;
+  z-index: 3999;
   backdrop-filter: blur(2px);
 }
 
