@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import './Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 
+import CursorGlow from '../Components/CursorGlow';
+
+
 function Login({ onLogin }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -50,6 +53,8 @@ function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
+      <CursorGlow />
+      
       <p className="auth-wordmark">Project Onion</p>
       <div className="auth-card">
         <div className="auth-card-header">

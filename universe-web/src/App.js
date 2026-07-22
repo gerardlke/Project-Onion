@@ -24,6 +24,7 @@ import AiChatBot from './Components/AiChatBot';
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username') || '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarTopics, setSidebarTopics] = useState([]);
 
   // Clears all session data and returns the user to login.
   function handleLogout() {
@@ -72,6 +73,7 @@ function App() {
             onClose={() => setSidebarOpen(false)}
             username={loggedInUser}
             onLogout={handleLogout}
+            topics={sidebarTopics}
           />
         </>
       )}
@@ -80,7 +82,7 @@ function App() {
         <Route
           path="/"
           element={loggedInUser
-            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} />
+            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} onTopicsChange={setSidebarTopics} />
             : <Navigate to="/login" replace />}
         />
 

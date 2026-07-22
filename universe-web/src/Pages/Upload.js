@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../Api';
 
 import './Upload.css';
+import CursorGlow from '../Components/CursorGlow';
+
 
 function TopicDropdown({ topics, selectedTopic, onSelect }) {
   const [open, setOpen] = useState(false);
@@ -62,7 +64,7 @@ function TopicDropdown({ topics, selectedTopic, onSelect }) {
   );
 }
 
-export default function Upload({ loggedInUser, onLogout }) {
+export default function Upload({ loggedInUser, onLogout, onTopicsChange }) {
   const navigate = useNavigate();
 
   const [topics, setTopics] = useState([]);
@@ -95,6 +97,7 @@ export default function Upload({ loggedInUser, onLogout }) {
           .map(normalizeTopic)
           .filter((t) => t.name);
         setTopics(loaded);
+        onTopicsChange?.(loaded); 
         if (loaded.length > 0) setSelectedTopic(loaded[0].name);
       } catch {
         setTopicMessage('Could not load topics. You can still create a new one.');
@@ -121,7 +124,12 @@ export default function Upload({ loggedInUser, onLogout }) {
       if (!result.success) { setTopicMessage('Topic creation failed.'); return; }
       const created = { name: result.name || newTopicName, description: result.description || newTopicDescription };
       
-      setTopics((current) => [...current, created]);
+      setTopics((current) => {
+        const updated = [...current, created];
+        onTopicsChange?.(updated);
+        return updated;
+      
+      });
       setSelectedTopic(created.name);
       setNewTopicName('');
       setNewTopicDescription('');
@@ -218,6 +226,7 @@ export default function Upload({ loggedInUser, onLogout }) {
 
   return (
     <div className="upload-page">
+      <CursorGlow />
 
       {/* Loading overlay — unchanged */}
       {uploadProgress !== null && (

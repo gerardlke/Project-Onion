@@ -9,6 +9,7 @@
   min-height: 100vh;
   padding: 48px 20px 60px;
   text-align: center;
+  position: relative;
 }
 
 @keyframes upload-fade-in {
@@ -515,3 +516,8 @@
     padding: 28px 22px 26px;
   }
 }
+
+.auth-card,
+.upload-card,
+.auth-wordmark,
+.upload-header { position: relative; z-index: 1; }

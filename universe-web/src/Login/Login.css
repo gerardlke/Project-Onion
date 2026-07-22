@@ -7,6 +7,7 @@
   min-height: 100vh;
   padding: 40px 20px;
   gap: 32px;
+  position: relative;
 }
 
 /* Wordmark / logo above the card */
@@ -206,6 +207,11 @@
 .auth-footer a:hover {
   color: white;
 }
+
+.auth-card,
+.upload-card,
+.auth-wordmark,
+.upload-header { position: relative; z-index: 1; }
 
 /* Offscreen accessibility helper */
 .offscreen {
