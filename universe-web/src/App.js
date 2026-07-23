@@ -11,6 +11,9 @@ import Universe from './Pages/Universe';
 
 import Sidebar from './Components/Sidebar';
 import UserIconButton from './Components/UserIconButton';
+import AiChatBot from './Components/AiChatBot';
+
+import CursorGlow from './Components/CursorGlow';
 
 /**
  * Root application component.
@@ -23,6 +26,7 @@ import UserIconButton from './Components/UserIconButton';
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username') || '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarTopics, setSidebarTopics] = useState([]);
 
   // Clears all session data and returns the user to login.
   function handleLogout() {
@@ -63,6 +67,8 @@ function App() {
   
   return (
     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <CursorGlow size={200} />
+
       {loggedInUser && (
         <>
           <UserIconButton onClick={() => setSidebarOpen(true)} />
@@ -71,6 +77,7 @@ function App() {
             onClose={() => setSidebarOpen(false)}
             username={loggedInUser}
             onLogout={handleLogout}
+            topics={sidebarTopics}
           />
         </>
       )}
@@ -79,7 +86,7 @@ function App() {
         <Route
           path="/"
           element={loggedInUser
-            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} />
+            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} onTopicsChange={setSidebarTopics} />
             : <Navigate to="/login" replace />}
         />
 
@@ -93,10 +100,7 @@ function App() {
         <Route
           path="/login"
           element={loggedInUser ? <Navigate to="/" replace /> : (
-            <div className="app login-page">
-              <h1>Welcome to Project Onion!</h1>
-              <Login onLogin={setLoggedInUser} />
-            </div>
+            <Login onLogin={setLoggedInUser} />
           )}
         />
 

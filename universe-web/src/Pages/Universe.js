@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../Api';
 import NetworkScene from '../Components/NetworkScene';
 import './Universe.css';
+import AiChatBot from '../Components/AiChatBot';
 
 
 export default function Universe() {
@@ -21,8 +22,8 @@ export default function Universe() {
   const [nodesProcessing, setNodesProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const [universeScale, setUniverseScale] = useState(1);
-  const [nodeScale, setNodeScale] = useState(1);
+  const [universeScale, setUniverseScale] = useState(1.7);
+  const [nodeScale, setNodeScale] = useState(0.7);
   const [showEdges, setShowEdges] = useState(true);
 
   function handleSetActiveNode(node) {
@@ -51,8 +52,6 @@ export default function Universe() {
 
       const nodesResult = await nodesResponse.json();
       const relationsResult = await relationsResponse.json();
-
-      console.log("RELATIONS RESULTS", relationsResult);
 
       // Normalizing topics response
       const topicsResult = await topicsResponse.json();
@@ -274,7 +273,7 @@ export default function Universe() {
       {/* Universe controls */}
       <div style={{
         position: 'fixed',
-        bottom: '20px',
+        bottom: 'calc(22px + 56px + 16px)',
         left: '20px',
         zIndex: 3000,
         background: 'rgba(255, 255, 255, 0.04)',
@@ -309,7 +308,7 @@ export default function Universe() {
               Spread
             </label>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
-              {universeScale.toFixed(1)}×
+              {universeScale.toFixed(1)}
             </span>
           </div>
           <input
@@ -330,7 +329,7 @@ export default function Universe() {
               Node Size
             </label>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
-              {nodeScale.toFixed(1)}×
+              {nodeScale.toFixed(1)}
             </span>
           </div>
           <input
@@ -378,6 +377,8 @@ export default function Universe() {
           {showEdges ? 'Edges Visible' : 'Edges Hidden'}
         </button>
       </div>
+
+      <AiChatBot />
     </div>
   );
 }

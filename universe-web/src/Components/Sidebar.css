@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   padding: 28px 0 24px;
-  z-index: 200;
+  z-index: 4000;
 
   /* Hidden off-screen by default */
   transform: translateX(-100%);
@@ -26,7 +26,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 199;
+  z-index: 3999;
   backdrop-filter: blur(2px);
 }
 
@@ -99,4 +99,50 @@
   background: rgba(248, 113, 113, 0.16);
   border-color: rgba(248, 113, 113, 0.5);
 }
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+.sidebar-topics {
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+
+.sidebar-topics-label {
+  color: rgba(255, 255, 255, 0.28);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.16em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.sidebar-topics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-topic-item {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.sidebar-topic-dot {
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 8px;
+  width: 8px;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.sidebar-topic-name {
+  color: rgba(255, 255, 255, 0.62);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

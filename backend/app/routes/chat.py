@@ -34,7 +34,7 @@ async def chat_query(
     Output: Returns LLM response and which concept nodes were used as context
     """
     try:
-        logger.info(f"Chat query from user '{user["username"]}'")
+        logger.info(f"Chat query from user '{user['username']}'")
 
         result = await process_chat_query(
             db=db,
@@ -48,7 +48,7 @@ async def chat_query(
         return ChatResponse(**result)
 
     except Exception as e:
-        logger.exception(f"Chat query failed for user '{user["username"]}': {e}")
+        logger.exception(f"Chat query failed for user '{user['username']}': {e}")
         raise HTTPException(
             status_code=500,
             detail="Internal server error"

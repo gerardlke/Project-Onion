@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 
+
 function Login({ onLogin }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -49,34 +50,54 @@ function Login({ onLogin }) {
   }
 
   return (
-    <section className="login-section">
-      <form onSubmit={handleSubmit} className="login-form">
-        <h2>Login</h2>
-        {errorMessage && <p className="errmsg">{errorMessage}</p>}
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          required
-        />
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Logging in...' : 'Login'}
-        </button>
-        <p className="register-link">
-          Don&apos;t have an account? <Link to="/register">Register here</Link>.
+    <div className="auth-page">
+      
+      <p className="auth-wordmark">Project Onion</p>
+      <div className="auth-card">
+        <div className="auth-card-header">
+          <p className="auth-card-eyebrow">Welcome back</p>
+          <h2 className="auth-card-title">Sign in</h2>
+        </div>
+
+        {errorMessage && <p className="auth-error">{errorMessage}</p>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="username">Username</label>
+            <input
+              id="username"
+              className="auth-input"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="your username"
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="auth-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button className="auth-btn" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          No account? <Link to="/register">Create one</Link>
         </p>
-      </form>
-    </section>
+      </div>
+    </div>
   );
 }
 
