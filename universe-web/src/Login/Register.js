@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+
 import './Login.css';
 
 
@@ -89,6 +90,7 @@ const Register = () => {
 
     return (
     <div className="auth-page">
+
         <p ref={errRef} className={errMsg ? 'auth-error' : 'offscreen'} aria-live="assertive">
         {errMsg}
         </p>

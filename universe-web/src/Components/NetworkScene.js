@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
 import * as THREE from 'three';
@@ -14,7 +14,7 @@ function SpringNode({ node, index, ...nodeProps }) {
   const { position } = useSpring({
     from: { position: [0, 0, 0] },
     to: { position: node.position },
-    delay: index * 80,  // 80ms stagger between nodes
+    delay: index * 10,  // 80ms stagger between nodes
     config: { mass: 1.2, tension: 120, friction: 22 },
   });
 
@@ -34,32 +34,46 @@ function SpringNode({ node, index, ...nodeProps }) {
 
 function Starfield() {
   const ref = useRef();
+  const numStars = 2000;
 
-  const positions = useMemo(() => {
-    const arr = new Float32Array(1000 * 3);
-    for (let i = 0; i < 1000; i++) {
-      // Distribute randomly inside a large sphere of radius 60
-      const r = 30 + Math.random() * 30;
+  // 1. Generate positions and random phase/twinkle speeds per star
+  const [positions, colors, phases] = useMemo(() => {
+    const posArr = new Float32Array(numStars * 3);
+    const colArr = new Float32Array(numStars * 3);
+    const phaseArr = new Float32Array(numStars);
+
+    const baseColors = [
+      new THREE.Color('#ffffff'),
+      new THREE.Color('#93c5fd'),
+      new THREE.Color('#fde047'),
+      new THREE.Color('#fca5a5'),
+    ];
+
+    for (let i = 0; i < numStars; i++) {
+      // Deep space distribution: wider spread for better parallax
+      const r = 100 + Math.random() * 1000;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      arr[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      arr[i * 3 + 2] = r * Math.cos(phi);
+
+      posArr[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      posArr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      posArr[i * 3 + 2] = r * Math.cos(phi);
+
+      const chosenColor = baseColors[Math.floor(Math.random() * baseColors.length)];
+      colArr[i * 3]     = chosenColor.r;
+      colArr[i * 3 + 1] = chosenColor.g;
+      colArr[i * 3 + 2] = chosenColor.b;
+
+      phaseArr[i] = Math.random() * Math.PI * 2;
     }
-    return arr;
-  }, []);
 
-  // Each star gets a slightly different brightness
-  const sizes = useMemo(() => {
-    const arr = new Float32Array(1000);
-    for (let i = 0; i < 1000; i++) arr[i] = 0.04 + Math.random() * 0.08;
-    return arr;
-  }, []);
+    return [posArr, colArr, phaseArr];
+  }, [numStars]);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     if (ref.current) {
-      ref.current.rotation.y += delta * 0.012;
-      ref.current.rotation.x += delta * 0.004;
+      ref.current.rotation.y += delta * 0.008;
+      ref.current.rotation.x += delta * 0.002;
     }
   });
 
@@ -71,17 +85,18 @@ function Starfield() {
           args={[positions, 3]}
         />
         <bufferAttribute
-          attach="attributes-size"
-          args={[sizes, 1]}
+          attach="attributes-color"
+          args={[colors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
-        color="#ffffff"
-        size={0.06}
+        size={1.2}
         sizeAttenuation
-        transparent
-        opacity={0.55}
+        vertexColors={true}
+        transparent={true}
+        opacity={0.5}
         depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   );
@@ -170,7 +185,6 @@ export default function NetworkScene({
 
         const isActive = (activeEdge?.source_id === edge.source_id) && (activeEdge?.target_id === edge.target_id);
         
-        console.log("visibleNodes", visibleNodes[edge.source_id], visibleNodes[edge.target_id])
         return (
           <NetworkEdge
             key={`${edge.source_id}-${edge.target_id}`}

@@ -241,9 +241,7 @@ export default function Upload({ loggedInUser, onLogout, onTopicsChange }) {
         </div>
       )}
 
-      {/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-          Page header — clean wordmark + subtitle
-      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */}
+      {/* Page header */}
       <div className="upload-header">
         <p className="upload-wordmark">Project Onion</p>
         <h1 className="upload-title">Your Knowledge Universe</h1>

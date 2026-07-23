@@ -4,7 +4,7 @@ import './AiChatBot.css';
 
 const INITIAL_MESSAGE = {
   role: 'assistant',
-  content: 'Ask me anything about your uploaded concepts.',
+  content: 'Ask me anything about your universe!',
 };
 
 export default function AiChatBot() {
@@ -98,11 +98,11 @@ export default function AiChatBot() {
       <section className={`ai-chatbot-panel ${isOpen ? 'ai-chatbot-panel--open' : ''}`} aria-label="AI chat bot">
         <header className="ai-chatbot-header">
           <div>
-            <p className="ai-chatbot-eyebrow">Project Onion AI</p>
-            <h2>Concept Assistant</h2>
+            <p className="ai-chatbot-eyebrow">Concept Assistant</p>
+            <h2>AI-NION</h2>
           </div>
           <span className={`ai-chatbot-status ${isSending ? 'ai-chatbot-status--busy' : ''}`}>
-            {isSending ? 'Thinking' : 'Online'}
+            {isSending ? 'Thinking...' : 'Ready'}
           </span>
         </header>
 

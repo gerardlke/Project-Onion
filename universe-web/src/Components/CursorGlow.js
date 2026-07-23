@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 
-export default function CursorGlow() {
+export default function CursorGlow({ size = 520 }) {
   const glowRef = useRef(null);
 
   useEffect(() => {
@@ -30,8 +30,8 @@ export default function CursorGlow() {
         position: 'fixed',
         pointerEvents: 'none',
         zIndex: 0,
-        width: '520px',
-        height: '520px',
+        width: `${size}px`,
+        height: `${size}px`,
         borderRadius: '50%',
         transform: 'translate(-50%, -50%)',
         background: 'radial-gradient(circle, rgba(99,120,255,0.10) 0%, rgba(6,182,212,0.06) 40%, transparent 70%)',

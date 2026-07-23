@@ -13,6 +13,8 @@ import Sidebar from './Components/Sidebar';
 import UserIconButton from './Components/UserIconButton';
 import AiChatBot from './Components/AiChatBot';
 
+import CursorGlow from './Components/CursorGlow';
+
 /**
  * Root application component.
  *
@@ -65,6 +67,8 @@ function App() {
   
   return (
     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <CursorGlow size={200} />
+
       {loggedInUser && (
         <>
           <UserIconButton onClick={() => setSidebarOpen(true)} />

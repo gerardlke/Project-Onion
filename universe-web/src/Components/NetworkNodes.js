@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -88,7 +88,7 @@ export default function NetworkNode({
         (dist - LABEL_SHOW_DISTANCE) / (LABEL_HIDE_DISTANCE - LABEL_SHOW_DISTANCE),
         0, 1
       );
-      const targetLabelOpacity = isOpen ? 1 : hovered ? 1 : distTarget;
+      const targetLabelOpacity = isOpen ? 1 : hovered ? 0.85 : distTarget;
       currentLabelOpacity.current += (targetLabelOpacity - currentLabelOpacity.current) * LERP;
       labelRef.current.fillOpacity = currentLabelOpacity.current;
     }
@@ -107,13 +107,25 @@ export default function NetworkNode({
       {/* Corona */}
       <mesh>
         <sphereGeometry args={[radius * 2.8, 16, 16]} />
-        <meshStandardMaterial ref={coronaRef} color={glowColor} transparent opacity={0.06} depthWrite={false} side={THREE.BackSide} />
+        <meshStandardMaterial 
+        ref={coronaRef} 
+        color={glowColor} 
+        transparent 
+        opacity={0.06} 
+        depthWrite={false} 
+        side={THREE.BackSide} />
       </mesh>
 
       {/* Glow halo */}
       <mesh>
         <sphereGeometry args={[radius * 1.7, 20, 20]} />
-        <meshStandardMaterial ref={glowRef} color={glowColor} transparent opacity={0.18} depthWrite={false} side={THREE.BackSide} />
+        <meshStandardMaterial 
+        ref={glowRef} 
+        color={glowColor} 
+        transparent 
+        opacity={0.18} 
+        depthWrite={false} 
+        side={THREE.BackSide} />
       </mesh>
 
       {/* Core */}
@@ -132,15 +144,15 @@ export default function NetworkNode({
       <Billboard position={[0, radius * 2.2 + 0.15, 0]}>
         <Text
           ref={labelRef}
-          fontSize={0.18}
+          fontSize={0.14}
           color="white"
           fillOpacity={0}
           anchorX="center"
           anchorY="bottom"
           font={undefined}
-          outlineWidth={0.012}
-          outlineColor="#000000"
-          outlineOpacity={0.6}
+          outlineWidth={0.002}
+          outlineColor="#ffffff"
+          outlineOpacity={0.3}
           maxWidth={3}
           textAlign="center"
         >

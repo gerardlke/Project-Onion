@@ -1,7 +1,7 @@
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import { useRef, useState, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+
 
 const FADE_SPEED = 6;
 const DISTANCE_HIDE = 18;
@@ -123,11 +123,11 @@ export default function NetworkEdge({
     }
 
     // Animate flow texture offset — faster when active/hovered
-    const flowSpeed = isActive ? 0.9 : hovered ? 0.55 : 0.25;
+    const flowSpeed = isActive ? 0.85 : hovered ? 0.65 : 0.45;
     flowOffsetRef.current += delta * flowSpeed;
     if (flowRef.current?.map) {
       flowRef.current.map.offset.x = -flowOffsetRef.current;
-      flowRef.current.opacity = op * (isActive ? 0.85 : hovered ? 0.55 : 0.28);
+      flowRef.current.opacity = op * (isActive ? 1.75 : hovered ? 1.25 : 1.0);
     }
   });
 

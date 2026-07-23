@@ -22,8 +22,8 @@ export default function Universe() {
   const [nodesProcessing, setNodesProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const [universeScale, setUniverseScale] = useState(1.75);
-  const [nodeScale, setNodeScale] = useState(1);
+  const [universeScale, setUniverseScale] = useState(1.7);
+  const [nodeScale, setNodeScale] = useState(0.7);
   const [showEdges, setShowEdges] = useState(true);
 
   function handleSetActiveNode(node) {
@@ -308,7 +308,7 @@ export default function Universe() {
               Spread
             </label>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
-              {universeScale.toFixed(1)}×
+              {universeScale.toFixed(1)}
             </span>
           </div>
           <input
@@ -329,7 +329,7 @@ export default function Universe() {
               Node Size
             </label>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
-              {nodeScale.toFixed(1)}×
+              {nodeScale.toFixed(1)}
             </span>
           </div>
           <input

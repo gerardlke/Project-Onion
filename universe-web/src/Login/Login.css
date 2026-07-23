@@ -28,10 +28,10 @@
 
   display: block;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
-  letter-spacing: 0.30em;
-  margin: 0 0 12px;
+  letter-spacing: 0.4em;
+  margin: 0 0 10px;
   text-transform: uppercase;
   animation: auth-fade-down 0.5s ease both wordmark-shimmer 4s linear 0.5s infinite;
 }
