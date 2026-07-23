@@ -11,7 +11,6 @@ import Universe from './Pages/Universe';
 
 import Sidebar from './Components/Sidebar';
 import UserIconButton from './Components/UserIconButton';
-import AiChatBot from './Components/AiChatBot';
 
 import CursorGlow from './Components/CursorGlow';
 

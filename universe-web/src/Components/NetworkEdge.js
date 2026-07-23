@@ -23,7 +23,6 @@ export default function NetworkEdge({
   const tubeARef = useRef();
   const tubeBRef = useRef();
   const flowRef = useRef();
-  const hitRef = useRef();
 
   const currentOpacityRef = useRef(0);
   const lastCameraPosRef = useRef(new THREE.Vector3());

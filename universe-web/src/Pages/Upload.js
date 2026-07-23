@@ -104,7 +104,7 @@ export default function Upload({ loggedInUser, onLogout, onTopicsChange }) {
       }
     }
     loadTopics();
-  }, []);
+  }, [onTopicsChange]);
 
   async function handleCreateTopic(event) {
     event.preventDefault();

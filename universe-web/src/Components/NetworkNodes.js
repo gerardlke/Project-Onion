@@ -53,7 +53,6 @@ export default function NetworkNode({
     const targetEmissive = targetColor;
     const targetGlowOpacity = isOpen ? 0.55 : hovered ? 0.38 : 0.18 + Math.sin(t * 0.9 + 1.1) * 0.09;
     const targetCoronaOpacity = isOpen ? 0.22 : hovered ? 0.14 : 0.06 + Math.sin(t * 0.55 + 2.3) * 0.04;
-    const targetLight = isOpen ? 5.5 : hovered ? 3.5 : 1.8 + Math.sin(t * 2.1) * 0.3;
     const targetCoreEmissive = isOpen ? 1.6 : hovered ? 1.2 : 0.88 + Math.sin(t * 1.4) * 0.12;
 
     // Lerp colors channel by channel

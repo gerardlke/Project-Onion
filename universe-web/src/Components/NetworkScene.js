@@ -37,10 +37,9 @@ function Starfield() {
   const numStars = 2000;
 
   // 1. Generate positions and random phase/twinkle speeds per star
-  const [positions, colors, phases] = useMemo(() => {
+  const [positions, colors] = useMemo(() => {
     const posArr = new Float32Array(numStars * 3);
     const colArr = new Float32Array(numStars * 3);
-    const phaseArr = new Float32Array(numStars);
 
     const baseColors = [
       new THREE.Color('#ffffff'),
@@ -63,11 +62,9 @@ function Starfield() {
       colArr[i * 3]     = chosenColor.r;
       colArr[i * 3 + 1] = chosenColor.g;
       colArr[i * 3 + 2] = chosenColor.b;
-
-      phaseArr[i] = Math.random() * Math.PI * 2;
     }
 
-    return [posArr, colArr, phaseArr];
+    return [posArr, colArr];
   }, [numStars]);
 
   useFrame(({ clock }, delta) => {

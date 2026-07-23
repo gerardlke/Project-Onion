@@ -1,7 +1,6 @@
 import React from 'react';
 
 import './Sidebar.css';
-import { TOPIC_COLORS } from '../Data/network.js';
 
 
 export default function Sidebar({ isOpen, onClose, username, onLogout, topics = [] }) {
