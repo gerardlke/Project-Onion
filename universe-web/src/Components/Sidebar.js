@@ -3,7 +3,7 @@ import React from 'react';
 import './Sidebar.css';
 
 
-export default function Sidebar({ isOpen, onClose, username, onLogout, topics = [] }) {
+export default function Sidebar({ isOpen, onClose, username, onLogout }) {
   return (
     <>
       {isOpen && (

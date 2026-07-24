@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { apiFetch } from '../Api';
+import { TOPIC_COLORS } from '../Data/network.js';
 import NetworkScene from '../Components/NetworkScene';
-import './Universe.css';
 import AiChatBot from '../Components/AiChatBot';
+import './Universe.css';
 
 
 export default function Universe() {
@@ -240,7 +241,10 @@ export default function Universe() {
       </header>
 
       {(loading || nodesProcessing) && (
-        <p className="status-message universe-status">Loading your universe...</p>
+        <div className="universe-loading" role="status" aria-label="Loading universe">
+          <div className="universe-spinner" />
+          <p className="universe-loading-text">Building your universe…</p>
+        </div>
       )}
       {error && (
         <p className="status-message universe-status">{error}</p>
@@ -407,6 +411,68 @@ export default function Universe() {
           {showEdges ? 'Edges Visible' : 'Edges Hidden'}
         </button>
       </div>
+
+      {topics.length > 0 && !isMobile && (
+        <div style={{
+          position: 'fixed',
+          bottom: 'calc(22px + 56px + 16px)',  /* same baseline as settings card */
+          right: '20px',
+          zIndex: 3000,
+          background: 'rgba(255, 255, 255, 0.04)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.10)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          minWidth: '160px',
+          fontFamily: "'Courier New', Courier, monospace",
+        }}>
+          {/* Label */}
+          <p style={{
+            margin: 0,
+            fontSize: '10px',
+            fontWeight: 'bold',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.35)',
+          }}>
+            Topics
+          </p>
+
+          {/* One row per topic */}
+          {topics.map((topic, index) => (
+            <div key={topic.name} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              {/* Color dot matching the topic's universe color */}
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                flexShrink: 0,
+                background: TOPIC_COLORS[index % TOPIC_COLORS.length],
+                boxShadow: `0 0 6px ${TOPIC_COLORS[index % TOPIC_COLORS.length]}`,
+              }} />
+              <span style={{
+                fontSize: '12px',
+                color: 'rgba(255,255,255,0.70)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '120px',
+              }}>
+                {topic.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <AiChatBot />
     </div>

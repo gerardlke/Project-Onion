@@ -76,7 +76,6 @@ function App() {
             onClose={() => setSidebarOpen(false)}
             username={loggedInUser}
             onLogout={handleLogout}
-            topics={sidebarTopics}
           />
         </>
       )}
