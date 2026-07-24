@@ -20,7 +20,7 @@ function TopicDropdown({ topics, selectedTopic, onSelect }) {
   }, [open]);
 
   const selectedLabel = topics.find((t) => t.name === selectedTopic)?.name
-    || 'No topics yet — create one below';
+    || 'No topics yet - create one first!';
 
   return (
     <div className="topic-dropdown" ref={ref}>

@@ -26,6 +26,8 @@ export default function Universe() {
   const [nodeScale, setNodeScale] = useState(0.7);
   const [showEdges, setShowEdges] = useState(true);
 
+  const isMobile = window.innerWidth <= 640;
+
   function handleSetActiveNode(node) {
     setActiveNode(node);
   }
@@ -111,8 +113,22 @@ export default function Universe() {
   // Node card anchors to bottom-right.
   const nodeCardStyle = {
     ...cardBase,
-    right: activeNode ? '20px' : '-380px',
-    bottom: '20px',
+    ...(isMobile ? {
+      left: 0,
+      right: 0,
+      bottom: activeNode ? '0' : '-60vh',
+      width: '100%',
+      height: '50vh',
+      borderRadius: '20px 20px 0 0',
+      transition: 'bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+    } : {
+      right: activeNode ? '20px' : '-380px',
+      bottom: '20px',
+      width: '340px',
+      height: '44vh',
+      borderRadius: '20px',
+      transition: 'right 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+    }),
     opacity: activeNode ? 1 : 0,
     pointerEvents: activeNode ? 'auto' : 'none',
   };
@@ -120,8 +136,22 @@ export default function Universe() {
   // Edge card anchors to top-right, below the header buttons.
   const edgeCardStyle = {
     ...cardBase,
-    right: activeEdge ? '20px' : '-380px',
-    top: '72px',
+    ...(isMobile ? {
+      left: 0,
+      right: 0,
+      top: activeEdge ? '0' : '-60vh',
+      width: '100%',
+      height: '50vh',
+      borderRadius: '0 0 20px 20px',
+      transition: 'top 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+    } : {
+      right: activeEdge ? '20px' : '-380px',
+      top: '72px',
+      width: '340px',
+      height: '44vh',
+      borderRadius: '20px',
+      transition: 'right 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+    }),
     opacity: activeEdge ? 1 : 0,
     pointerEvents: activeEdge ? 'auto' : 'none',
   };
@@ -283,7 +313,7 @@ export default function Universe() {
         borderRadius: '16px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
         padding: '18px 22px',
-        display: 'flex',
+        display: isMobile ? 'none' : 'flex',
         flexDirection: 'column',
         gap: '14px',
         minWidth: '200px',

@@ -229,3 +229,18 @@
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 22px 28px;
+    border-radius: 18px;
+  }
+
+  .auth-card-title {
+    font-size: 22px;
+  }
+
+  .auth-btn {
+    padding: 13px;
+  }
+}

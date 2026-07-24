@@ -316,12 +316,14 @@
 
 @media (max-width: 520px) {
   .ai-chatbot {
-    bottom: 16px;
-    left: 16px;
+    bottom: 12px;
+    left: 12px;
   }
 
   .ai-chatbot-panel {
     bottom: 68px;
-    height: min(560px, calc(100vh - 96px));
+    height: min(520px, calc(100vh - 90px));
+    width: calc(100vw - 24px);
+    left: 0;
   }
 }

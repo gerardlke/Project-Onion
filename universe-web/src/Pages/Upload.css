@@ -597,12 +597,45 @@
 }
 
 /* Responsive */
-@media (max-width: 520px) {
+@media (max-width: 480px) {
   .upload-card {
-    padding: 24px 20px;
+    padding: 22px 16px;
+    border-radius: 16px;
   }
+
+  .upload-title {
+    font-size: 22px;
+  }
+
+  .upload-topic-row {
+    flex-direction: column;
+  }
+
+  .upload-new-topic-btn {
+    width: 100%;
+  }
+
+  .upload-cta-btn {
+    font-size: 13px;
+    padding: 13px 20px;
+  }
+
   .upload-modal-card {
-    padding: 28px 22px 26px;
+    padding: 24px 16px 20px;
+    width: calc(100% - 24px);
+  }
+
+  .auth-card {
+    padding: 32px 22px 28px;
+    border-radius: 18px;
+  }
+
+  .auth-card-title {
+    font-size: 22px;
+  }
+
+  .auth-btn {
+    padding: 13px;
   }
 }
 
