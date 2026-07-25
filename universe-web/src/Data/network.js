@@ -4,7 +4,7 @@ import { apiFetch } from '../Api';
 // Getting topic color for the concept node
 export const TOPIC_COLORS = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
 
-export function getTopicColor(topicId, topics) {
+export function getTopicColor(topicId) {
   return TOPIC_COLORS[(topicId < 0 ? 0 : topicId) % TOPIC_COLORS.length];
 }
 

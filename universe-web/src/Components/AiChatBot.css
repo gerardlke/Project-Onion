@@ -128,6 +128,11 @@
     animation:pulse 0.5s infinite;
 }
 
+.ai-chatbot-status--offline::before {
+  background: #f87171;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.8);
+}
+
 .ai-chatbot-messages {
   display: flex;
   flex: 1;

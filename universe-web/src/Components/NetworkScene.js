@@ -112,22 +112,27 @@ export default function NetworkScene({
   setActiveEdge,
   onProcessingChange
 }) {
+  const onProcessingChangeRef = useRef(onProcessingChange);
+  useEffect(() => {
+    onProcessingChangeRef.current = onProcessingChange;
+  }, [onProcessingChange]);
+
   const [visibleNodes, setVisibleNodes] = useState([]);
   
   useEffect(() => {
     let cancelled = false;
-    
+
     async function processNodes() {
-      onProcessingChange?.(true);
+      onProcessingChangeRef.current?.(true);
       try {
         const nodes = await Promise.all(
           conceptNodes.map((concept) =>
-            createConceptNode(concept, getTopicColor(concept.topic_id, topics))
+            createConceptNode(concept, getTopicColor(concept.topic_id))
           )
         );
         if (!cancelled) setVisibleNodes(nodes);
       } finally {
-        if (!cancelled) onProcessingChange?.(false);
+        if (!cancelled) onProcessingChangeRef.current?.(false);
       }
     }
 
@@ -135,10 +140,11 @@ export default function NetworkScene({
       processNodes();
     } else {
       setVisibleNodes([]);
-      onProcessingChange?.(false);
+      onProcessingChangeRef.current?.(false);
     }
+
     return () => { cancelled = true; };
-  }, [conceptNodes, topics, onProcessingChange]);
+  }, [conceptNodes, topics]);
 
   const scaledNodes = visibleNodes.map((node) => ({
     ...node,

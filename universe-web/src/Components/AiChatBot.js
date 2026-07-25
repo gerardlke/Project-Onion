@@ -14,6 +14,7 @@ export default function AiChatBot() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
+  const [serviceAvailable, setServiceAvailable] = useState(true);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,7 +61,9 @@ export default function AiChatBot() {
       };
 
       setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+      setServiceAvailable(true);
     } catch {
+      setServiceAvailable(false);
       setError('The AI chat service is unavailable right now.');
       setMessages((currentMessages) => [
         ...currentMessages,
@@ -101,8 +104,11 @@ export default function AiChatBot() {
             <p className="ai-chatbot-eyebrow">Concept Assistant</p>
             <h2>AI-NION</h2>
           </div>
-          <span className={`ai-chatbot-status ${isSending ? 'ai-chatbot-status--busy' : ''}`}>
-            {isSending ? 'Thinking...' : 'Ready'}
+          <span className={`ai-chatbot-status ${
+            isSending ? 'ai-chatbot-status--busy' :
+            !serviceAvailable ? 'ai-chatbot-status--offline' : ''
+          }`}>
+            {isSending ? 'Thinking' : !serviceAvailable ? 'Not Available' : 'Online'}
           </span>
         </header>
 

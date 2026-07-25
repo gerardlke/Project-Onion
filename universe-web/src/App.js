@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
 import './App.css';
@@ -14,26 +14,19 @@ import UserIconButton from './Components/UserIconButton';
 
 import CursorGlow from './Components/CursorGlow';
 
-/**
- * Root application component.
- *
- * Responsibilities:
- * - Hold top-level UI state for login, upload modal visibility, and the latest uploaded file.
- * - Render login/register routes before a user is signed in.
- * - Keep the network canvas mounted after login so the universe is visible before and after upload.
- */
+
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username') || '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarTopics, setSidebarTopics] = useState([]);
 
   // Clears all session data and returns the user to login.
-  function handleLogout() {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('tokenExpiresAt');
+    localStorage.removeItem('username');
     setLoggedInUser('');
     setSidebarOpen(false);
-  }
+  }, []);
 
   // Check whether a valid session already exists or if existing token is expired
   useEffect(() => {
@@ -42,26 +35,20 @@ function App() {
     if (!token || !expiresAt || Date.now() >= expiresAt) {
       handleLogout();
     }
-  }, []);
+  }, [handleLogout]);
 
   // Set a timer to log the user out exactly when the token expires.
   useEffect(() => {
     if (!loggedInUser) return;
-
     const expiresAt = Number(localStorage.getItem('tokenExpiresAt'));
     const msUntilExpiry = expiresAt - Date.now();
-
     if (msUntilExpiry <= 0) {
       handleLogout();
       return;
     }
-
-    const timer = setTimeout(() => {
-      handleLogout();
-    }, msUntilExpiry);
-
-    return () => clearTimeout(timer);   // clean up if user logs out manually first
-  }, [loggedInUser]);
+    const timer = setTimeout(handleLogout, msUntilExpiry);
+    return () => clearTimeout(timer);
+  }, [loggedInUser, handleLogout]);
 
   
   return (
@@ -84,7 +71,7 @@ function App() {
         <Route
           path="/"
           element={loggedInUser
-            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} onTopicsChange={setSidebarTopics} />
+            ? <Upload loggedInUser={loggedInUser} onLogout={handleLogout} />
             : <Navigate to="/login" replace />}
         />
 

@@ -2,11 +2,86 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { apiFetch } from '../Api';
-import { TOPIC_COLORS } from '../Data/network.js';
+import { getTopicColor } from '../Data/network.js';
 import NetworkScene from '../Components/NetworkScene';
 import AiChatBot from '../Components/AiChatBot';
 import './Universe.css';
 
+
+function TopicLegendRow({ topic, color }) {
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const tooltipPosRef = useRef({ x: 0, y: 0 });
+
+  function handleMouseMove(e) {
+    const newX = e.clientX + 14;
+    const newY = e.clientY - 8;
+    if (
+      Math.abs(newX - tooltipPosRef.current.x) > 2 ||
+      Math.abs(newY - tooltipPosRef.current.y) > 2
+    ) {
+      tooltipPosRef.current = { x: newX, y: newY };
+      setTooltipPos({ x: newX, y: newY });
+    }
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        cursor: topic.description ? 'default' : undefined,
+        position: 'relative',
+      }}
+      onMouseEnter={() => topic.description && setTooltipVisible(true)}
+      onMouseLeave={() => setTooltipVisible(false)}
+      onMouseMove={handleMouseMove}
+    >
+      <span style={{
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        flexShrink: 0,
+        background: color,
+        boxShadow: `0 0 6px ${color}`,
+      }} />
+      <span style={{
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.70)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        maxWidth: '120px',
+      }}>
+        {topic.name}
+      </span>
+
+      {tooltipVisible && topic.description && (
+        <div style={{
+          position: 'fixed',
+          left: tooltipPos.x,
+          top: tooltipPos.y,
+          zIndex: 9999,
+          background: 'rgba(8, 13, 28, 0.97)',
+          border: '1px solid rgba(255,255,255,0.14)',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          padding: '8px 12px',
+          maxWidth: '200px',
+          fontFamily: "'Courier New', Courier, monospace",
+          fontSize: '11px',
+          color: 'rgba(255,255,255,0.75)',
+          lineHeight: '1.5',
+          pointerEvents: 'none',
+          whiteSpace: 'normal',
+        }}>
+          {topic.description}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Universe() {
   const navigate = useNavigate();
@@ -27,7 +102,15 @@ export default function Universe() {
   const [nodeScale, setNodeScale] = useState(0.7);
   const [showEdges, setShowEdges] = useState(true);
 
-  const isMobile = window.innerWidth <= 640;
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 640);
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   function handleSetActiveNode(node) {
     setActiveNode(node);
@@ -58,17 +141,21 @@ export default function Universe() {
 
       // Normalizing topics response
       const topicsResult = await topicsResponse.json();
-      function normalizeTopic(topic) {
+
+      function normalizeTopic(topic, index) {
+        const assignedId = index + 1; 
+
         if (typeof topic === 'string') 
-          return { id: null, name: topic, description: '' };
+          return { id: assignedId, name: topic, description: '' };
         if (Array.isArray(topic)) 
-          return { id: null, name: topic[0] || '', description: topic[1] || '' };
-        return { id: topic?.id ?? null, name: topic?.name || '', description: topic?.description || '' };
+          return { id: assignedId, name: topic[0] || '', description: topic[1] || '' };
+        
+        return { id: topic?.id ?? assignedId, name: topic?.name || '', description: topic?.description || '' };
       }
 
       // Store unique topic names derived from nodes so NetworkScene can resolve colors without needing separate call
       const uniqueTopics = (topicsResult.topics || topicsResult.data || [])
-        .map(normalizeTopic)
+        .map((topic, index) => normalizeTopic(topic, index))
         .filter((t) => t.name);
 
       setTopics(uniqueTopics || []);
@@ -415,8 +502,8 @@ export default function Universe() {
       {topics.length > 0 && !isMobile && (
         <div style={{
           position: 'fixed',
-          bottom: 'calc(22px + 56px + 16px)',  /* same baseline as settings card */
-          right: '20px',
+          bottom: 'calc(22px + 56px + 16px + 180px + 12px)',
+          left: '20px',
           zIndex: 3000,
           background: 'rgba(255, 255, 255, 0.04)',
           backdropFilter: 'blur(20px)',
@@ -429,9 +516,9 @@ export default function Universe() {
           flexDirection: 'column',
           gap: '10px',
           minWidth: '160px',
+          maxWidth: '200px',
           fontFamily: "'Courier New', Courier, monospace",
         }}>
-          {/* Label */}
           <p style={{
             margin: 0,
             fontSize: '10px',
@@ -443,34 +530,23 @@ export default function Universe() {
             Topics
           </p>
 
-          {/* One row per topic */}
-          {topics.map((topic, index) => (
-            <div key={topic.name} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              {/* Color dot matching the topic's universe color */}
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                flexShrink: 0,
-                background: TOPIC_COLORS[index % TOPIC_COLORS.length],
-                boxShadow: `0 0 6px ${TOPIC_COLORS[index % TOPIC_COLORS.length]}`,
-              }} />
-              <span style={{
-                fontSize: '12px',
-                color: 'rgba(255,255,255,0.70)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: '120px',
-              }}>
-                {topic.name}
-              </span>
-            </div>
-          ))}
+          {/* Scrollable list with max height shows 3 topics */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            maxHeight: '108px',
+            overflowY: topics.length > 3 ? 'auto' : 'visible',
+            paddingRight: topics.length > 3 ? '4px' : '0',
+          }} className="topics-legend-scroll">
+            {topics.map((topic) => (
+              <TopicLegendRow
+                key={topic.id ?? topic.name}
+                topic={topic}
+                color={getTopicColor(topic.id)}
+              />
+            ))}
+          </div>
         </div>
       )}
 
