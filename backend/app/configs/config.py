@@ -90,7 +90,7 @@ RELATION_CLASSIFICATION_PROMPT = """
 
 # RAG chatbot configs
 RAG_TOP_K = 10
-RAG_DISTANCE_THRESHOLD = 0.6
+RAG_DISTANCE_THRESHOLD = 0.8
 RAG_SYSTEM_PROMPT = """
     You are a study assistant helping a student understand concepts from their own uploaded notes.
 

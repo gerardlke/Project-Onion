@@ -139,8 +139,42 @@ export default function Universe() {
     }
   }
 
-  function handleSetActiveEdge(edge) {
+  async function handleSetActiveEdge(edge) {
+    if (!edge) {
+      setActiveEdge(null);
+      return;
+    }
+
     setActiveEdge(edge);
+
+    try {
+      const [source_detail, target_detail] = await Promise.all([
+        fetchNodeDetail(edge.source_id),
+        fetchNodeDetail(edge.target_id)
+      ]);
+
+      setActiveEdge((current) => {
+        if (!current || current.id !== edge.id) {
+          return current;
+        }
+        return {
+          ...current,
+          source_label: source_detail.concept,
+          target_label: target_detail.concept,
+        };
+      });
+
+    } catch (error) {
+      console.error("Failed to load edge details:", error);
+      setActiveEdge((current) => {
+        if (!current || current.id !== edge.id) {
+          return current;
+        }
+        return {
+          ...current,
+        };
+      });
+    }
   }
 
   async function fetchUniverse() {

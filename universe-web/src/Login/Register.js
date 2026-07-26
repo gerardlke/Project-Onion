@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { Info } from 'lucide-react';
 
 import './Login.css';
 
@@ -90,6 +91,21 @@ const Register = () => {
 
     return (
     <div className="auth-page">
+    
+        <div
+          className="about-icon"
+          onClick={() => navigate('/about')}
+          role="button"
+          tabIndex={0}
+          aria-label="About Project Onion"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              navigate('/about');
+            }
+          }}
+        >
+          <Info size={22} strokeWidth={2} />
+        </div>
 
         <p ref={errRef} className={errMsg ? 'auth-error' : 'offscreen'} aria-live="assertive">
         {errMsg}

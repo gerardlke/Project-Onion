@@ -1,12 +1,37 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaLinkedinIn, FaGithub } from "react-icons/fa";
+
 import './About.css';
+
 
 export default function About() {
   const navigate = useNavigate();
 
   return (
     <main className="about-page">
+      <button
+        className="about-back-btn"
+        onClick={() => navigate(-1)}
+        aria-label="Go back"
+      >
+        <svg
+          className="back-arrow"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M15 18L9 12L15 6"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
       <section className="about-hero" aria-labelledby="about-title">
         <p className="about-wordmark">Project Onion</p>
         <h1 id="about-title" className="about-title">About Us</h1>
@@ -64,16 +89,79 @@ export default function About() {
       </section>
 
       <section className="about-mission">
+
         <div>
           <p className="about-section-label">Our Mission</p>
           <h2>Make studying feel navigable.</h2>
         </div>
-        <p>
-          Project Onion is built around one idea: learning is easier when you can
-          see how ideas relate. We combine document processing, semantic search,
-          and visual exploration so students can move from raw files to a useful
-          mental map.
-        </p>
+
+        <div className="about-mission-content">
+          <p>
+            Project Onion is built around one idea: learning is easier when you can
+            see how ideas relate. We combine document processing, semantic search,
+            and visual exploration so students can move from raw files to a useful
+            mental map.
+          </p>
+
+          <div className="about-developers">
+            <p className="developer-label">
+              Created by
+            </p>
+            <div className="developer-list">
+              <div className="developer">
+
+                <span className="developer-name">
+                  Gerard
+                </span>
+                <div className="developer-icons">
+                  <a
+                    href="https://www.linkedin.com/in/gerardlumkaien/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-icon linkedin"
+                  >
+                    <FaLinkedinIn/>
+                  </a>
+                  <a
+                    href="https://github.com/gerardlke"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-icon github"
+                  >
+                    <FaGithub/>
+                  </a>
+                </div>
+              </div>
+
+              <div className="developer">
+                <span className="developer-name">
+                  Cedric
+                </span>
+                <div className="developer-icons">
+                  <a
+                    href="https://www.linkedin.com/in/cedric-cheng-504b94214/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-icon linkedin"
+                  >
+                    <FaLinkedinIn/>
+                  </a>
+                  <a
+                    href="https://github.com/seadrickbug"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-icon github"
+                  >
+                    <FaGithub/>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
       </section>
 
     </main>

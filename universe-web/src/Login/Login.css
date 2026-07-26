@@ -244,3 +244,40 @@
     padding: 13px;
   }
 }
+
+.about-icon {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  cursor: pointer;
+  user-select: none;
+  z-index: 1000;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.about-icon:hover {
+  color: white;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 10px rgba(99, 120, 255, 0.45));
+}
+
+.about-icon:active {
+  transform: scale(0.95);
+}
+
+.about-icon:focus-visible {
+  outline: none;
+  color: white;
+  filter: drop-shadow(0 0 10px rgba(99, 120, 255, 0.45));
+}

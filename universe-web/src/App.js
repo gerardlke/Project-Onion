@@ -82,13 +82,6 @@ function App() {
             ? <Universe onLogout={handleLogout} />
             : <Navigate to="/login" replace />}
         />
-
-        <Route
-          path="/about"
-          element={loggedInUser
-            ? <About />
-            : <Navigate to="/login" replace />}
-        />
         
         <Route
           path="/login"
@@ -96,6 +89,8 @@ function App() {
             <Login onLogin={setLoggedInUser} />
           )}
         />
+
+        <Route path="/about" element={ <About /> } />
 
         <Route path="/register" element={<Register />} />
 

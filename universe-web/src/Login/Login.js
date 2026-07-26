@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import './Login.css';
 import { Link, useNavigate } from 'react-router-dom';
+import { Info } from 'lucide-react';
+
+import './Login.css';
 
 
 function Login({ onLogin }) {
@@ -51,6 +53,21 @@ function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
+
+    <div
+      className="about-icon"
+      onClick={() => navigate('/about')}
+      role="button"
+      tabIndex={0}
+      aria-label="About Project Onion"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          navigate('/about');
+        }
+      }}
+    >
+      <Info size={22} strokeWidth={2} />
+    </div>
       
       <p className="auth-wordmark">Project Onion</p>
       <div className="auth-card">
