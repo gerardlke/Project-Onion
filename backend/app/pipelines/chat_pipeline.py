@@ -64,7 +64,7 @@ async def process_chat_query(db, user_id: int, query: str, conversation_history:
     raw = await generate(
         messages=messages,      
         max_new_tokens=700,
-        temperature=0.4  # slight temperature for natural conversation
+        temperature=0.3  # slight temperature for natural conversation
     )
 
     # Strip markdown fences if model wraps output
@@ -77,7 +77,7 @@ async def process_chat_query(db, user_id: int, query: str, conversation_history:
         citations = parsed.get("citations", [])
         knowledge_gaps = parsed.get("knowledge_gaps", [])
     except (json.JSONDecodeError, KeyError):
-        logger.warning("Chat response was not valid JSON — returning raw text")
+        logger.warning("Chat response was not valid JSON - returning raw text")
         response = raw
         citations = knowledge_gaps = []
 

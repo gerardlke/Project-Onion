@@ -1,0 +1,73 @@
+# CS2030S: Programming Methodology II
+
+## Object-Oriented Programming
+
+Object-Oriented Programming (OOP) organises software around objects that bundle state and behaviour together, rather than around functions and logic. Each object is an instance of a class, which defines the structure and capabilities shared by all objects of that type. OOP enables modelling of real-world entities in a natural way and supports building large, maintainable systems through encapsulation, inheritance, and polymorphism.
+
+A Class is a blueprint that defines the fields (state) and methods (behaviour) of its instances. Fields store the data associated with an object, while methods define what the object can do. In Java, a class is declared with access modifiers that control visibility, and a constructor initialises the object's state when it is instantiated with the `new` keyword.
+
+Encapsulation is the principle of hiding an object's internal state and requiring all interaction to go through well-defined methods. Fields are typically declared `private` and exposed through `public` getter and setter methods. This prevents external code from putting an object into an invalid state and allows the internal implementation to change without affecting code that uses the class.
+
+Inheritance allows a subclass to extend a superclass, inheriting all non-private fields and methods while adding or overriding behaviour. Java uses `extends` for class inheritance. A subclass can be used anywhere its superclass is expected, forming an is-a relationship. Inheritance promotes code reuse but creates tight coupling between parent and child classes, so it should be used only when the is-a relationship is genuinely valid.
+
+Method Overriding allows a subclass to provide its own implementation of a method defined in its superclass. The overriding method must have the same name, parameter list, and return type. Java uses dynamic dispatch to call the correct overriding method at runtime based on the actual type of the object, not the declared type of the variable.
+
+## Interfaces and Abstraction
+
+An Interface in Java defines a contract — a set of method signatures that any implementing class must provide. Interfaces support a form of multiple inheritance of type, since a class can implement multiple interfaces. They decouple the definition of behaviour from its implementation, enabling flexible and extensible designs.
+
+Abstract Classes sit between concrete classes and interfaces. They can define both abstract methods with no body (which subclasses must implement) and concrete methods with implementations (which subclasses can inherit or override). A class that contains at least one abstract method must itself be declared abstract and cannot be instantiated directly.
+
+The Liskov Substitution Principle states that objects of a subtype should be substitutable for objects of their supertype without altering the correctness of the program. This formalises the is-a relationship: a subclass must honour all the behavioural contracts of its superclass, not just its method signatures. Violating this principle is a common source of subtle bugs in inheritance hierarchies.
+
+## Generics and Type Safety
+
+Generics allow classes, interfaces, and methods to be parameterised by type, enabling code to work correctly across multiple types without sacrificing type safety. In Java, a generic class is declared with a type parameter such as `<T>`, which is replaced by a concrete type at the point of use. Generics shift type errors from runtime to compile time.
+
+Bounded Type Parameters constrain the types that can be used as type arguments. An upper-bounded wildcard `<? extends T>` accepts T and any subtype, useful when reading from a generic structure. A lower-bounded wildcard `<? super T>` accepts T and any supertype, useful when writing to a generic structure. This distinction is captured by the PECS principle: Producer Extends, Consumer Super.
+
+Type Erasure is the mechanism by which the Java compiler removes generic type information after type-checking, replacing type parameters with their bounds or Object. This maintains backward compatibility with pre-generic code but means generic type information is unavailable at runtime, which limits certain patterns such as creating arrays of generic types.
+
+## Functional Programming in Java
+
+Lambdas are anonymous functions introduced in Java 8 that can be passed as arguments, returned from methods, and stored in variables. A lambda expression has the form `(parameters) -> expression` or `(parameters) -> { statements }`. Lambdas enable a functional style of programming and are used extensively with the Streams API and functional interfaces.
+
+A Functional Interface is an interface with exactly one abstract method. Lambdas implement functional interfaces implicitly — any lambda can be assigned to a compatible functional interface type. Java provides common functional interfaces in `java.util.function`, including `Function<T,R>`, `Predicate<T>`, `Consumer<T>`, and `Supplier<T>`.
+
+Higher-Order Functions accept functions as arguments or return functions as results. In Java, higher-order methods operate on functional interfaces. Methods like `map`, `filter`, and `reduce` on the Streams API are higher-order functions that transform, select, or aggregate stream elements using a provided lambda.
+
+Pure Functions produce the same output for the same input and have no side effects — they do not modify shared state, print to console, or perform I/O. Pure functions are easier to reason about, test, and compose. In Java, pure functions are expressed as lambdas or static methods with no access to mutable state.
+
+Immutability means an object's state cannot be changed after construction. Immutable objects are inherently thread-safe and can be shared freely without defensive copying. In Java, immutability is achieved by declaring fields `final`, providing no setters, and ensuring that mutable fields are not exposed through getters. The `String` class is a well-known example of an immutable type.
+
+## Streams and Lazy Evaluation
+
+The Streams API in Java provides a declarative way to process sequences of elements using a pipeline of operations. A stream pipeline consists of a source, zero or more intermediate operations, and a terminal operation. Intermediate operations such as `map`, `filter`, and `flatMap` are lazy — they are not evaluated until a terminal operation such as `collect`, `reduce`, or `forEach` is called.
+
+Lazy Evaluation defers computation until its result is actually needed. In the context of Streams, this means that intermediate operations build up a description of transformations without executing them. When the terminal operation is invoked, the pipeline is executed in a single pass over the data, which can improve efficiency by avoiding unnecessary computation and enabling short-circuit operations like `findFirst`.
+
+Method References provide a shorthand for lambdas that simply call an existing method. A static method reference has the form `ClassName::methodName`, an instance method reference on a specific object has the form `instance::methodName`, and a constructor reference has the form `ClassName::new`. Method references improve readability when the lambda body is a single method call with matching parameters.
+
+## Monads and Optional
+
+The Optional Class in Java represents a value that may or may not be present, providing a type-safe alternative to returning `null`. Instead of checking for null, callers use `isPresent`, `get`, `orElse`, or the functional methods `map` and `flatMap` to handle the absent case explicitly. This forces the handling of missing values at the type level and reduces NullPointerExceptions.
+
+Monad is a design pattern from functional programming that structures computations as a sequence of steps, each producing a value wrapped in a context. Optional is a simple monad — `map` applies a function to the wrapped value if present, and `flatMap` applies a function that itself returns an Optional, avoiding nested optionals. This pattern generalises to other contexts such as asynchronous computation and error handling.
+
+## Concurrency
+
+A Thread is an independent path of execution within a program. Java supports multi-threading, where multiple threads execute concurrently within the same process and share the same heap memory. Threads improve throughput for I/O-bound tasks but introduce challenges around shared state, requiring synchronisation to prevent data corruption.
+
+A Race Condition occurs when the correctness of a program depends on the relative timing of operations in multiple threads. If two threads read and write a shared variable without synchronisation, the result is non-deterministic and potentially incorrect. Race conditions are difficult to reproduce and debug because they depend on scheduling decisions made by the OS.
+
+Synchronisation in Java uses the `synchronized` keyword to ensure that only one thread executes a block of code at a time by acquiring a monitor lock on an object. While synchronisation prevents race conditions, it introduces contention — threads that cannot acquire the lock must wait, potentially reducing parallelism and causing deadlocks if locks are acquired in inconsistent orders.
+
+Immutability eliminates the need for synchronisation on shared state by ensuring that shared objects cannot be modified after construction. Since immutable objects cannot change, multiple threads can read them concurrently without risk. This is one of the strongest motivations for preferring immutable designs in concurrent programs, and connects directly to the functional programming principle of avoiding mutable state.
+
+## Design Principles
+
+The Single Responsibility Principle states that a class should have only one reason to change — it should encapsulate one cohesive unit of functionality. Classes with multiple responsibilities are harder to test, modify, and reuse because changes to one responsibility may unexpectedly affect the other.
+
+The Open-Closed Principle states that software entities should be open for extension but closed for modification. New behaviour should be added by creating new classes or implementing existing interfaces, not by modifying existing working code. This protects stable code from breaking changes and is typically achieved through abstraction and polymorphism.
+
+Composition over Inheritance is a design guideline that favours building complex behaviour by combining simple objects (has-a relationship) rather than through deep inheritance hierarchies (is-a relationship). Composition is more flexible because the composed objects can be swapped at runtime, while inheritance fixes relationships at compile time and can lead to fragile base class problems.

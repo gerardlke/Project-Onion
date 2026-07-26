@@ -38,8 +38,6 @@ def build_prompt(query: str, retrieved_concepts: list[dict], conversation_histor
     context_block = build_context_block(retrieved_concepts)
     system_content = RAG_SYSTEM_PROMPT.strip().format(context=context_block)
 
-    print("SYSTEM CONTENT", system_content)
-
     messages = [{"role": "system", "content": system_content}]
 
     # Include prior conversation turns for multi-turn coherence
