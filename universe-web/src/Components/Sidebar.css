@@ -99,3 +99,24 @@
   background: rgba(248, 113, 113, 0.16);
   border-color: rgba(248, 113, 113, 0.5);
 }
+
+.sidebar-content {
+  padding: 0 20px 20px;
+  font-family: 'Courier New', Courier, monospace;
+  text-decoration: none;
+}
+
+.sidebar-content a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+
+.sidebar-content a:visited {
+  color: rgba(255, 255, 255, 0.75); /* Put your desired link color here */
+  text-decoration: none; /* Optional: removes the default underline */
+}
+
+.sidebar-content a:hover {
+  font-weight: bold; /* Change to your desired hover color */
+  text-decoration: none; /* Optional: adds an underline on hover */
+}

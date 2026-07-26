@@ -19,11 +19,11 @@ export default function Sidebar({ isOpen, onClose, username, onLogout }) {
           <div className="sidebar-username">{username}</div>
         </div>
 
-        <div className="sidebar-divider" />
+        <div className="sidebar-divider"/>
 
-        <div className="sidebar-content">
+        <div className="sidebar-content" style={{ display: 'flex', flexDirection: 'column', gap: '10px', textDecoration: 'none' }}>
           <Link to="/about">About Us</Link>
-          <Link to="/home">Back to Universe</Link>
+          <Link to="/">Back to Universe</Link>
         </div>
 
         <nav className="sidebar-nav">

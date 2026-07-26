@@ -8,6 +8,7 @@ import Register from './Login/Register';
 
 import Upload from './Pages/Upload';
 import Universe from './Pages/Universe';
+import About from './Components/About';
 
 import Sidebar from './Components/Sidebar';
 import UserIconButton from './Components/UserIconButton';
@@ -79,6 +80,13 @@ function App() {
           path="/universe"
           element={loggedInUser
             ? <Universe onLogout={handleLogout} />
+            : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/about"
+          element={loggedInUser
+            ? <About />
             : <Navigate to="/login" replace />}
         />
         

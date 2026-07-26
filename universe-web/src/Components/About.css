@@ -1,0 +1,210 @@
+.about-page {
+  align-items: center;
+  animation: about-fade-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: 72px 20px 56px;
+  position: relative;
+  text-align: center;
+}
+
+@keyframes about-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.about-wordmark {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(165, 180, 252, 0.9) 30%,
+    rgba(103, 232, 249, 0.95) 55%,
+    rgba(165, 180, 252, 0.9) 75%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  background-clip: text;
+  background-size: 200% auto;
+  color: transparent;
+  display: block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.4em;
+  margin: 0;
+  text-transform: uppercase;
+  -webkit-background-clip: text;
+  animation: about-wordmark-shimmer 4s linear 0.5s infinite;
+}
+
+@keyframes about-wordmark-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.about-title {
+  color: #ffffff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: bold;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 0;
+  text-shadow: 0 0 42px rgba(99, 120, 255, 0.42);
+}
+
+.about-subtitle {
+  color: rgba(255, 255, 255, 0.68);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(13px, 1.6vw, 16px);
+  line-height: 1.65;
+  margin: 0 auto;
+  max-width: 680px;
+}
+
+.about-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 980px;
+  width: min(100%, 980px);
+}
+
+.about-card {
+  background: rgba(10, 16, 35, 0.72);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 230px;
+  padding: 24px;
+  text-align: left;
+}
+
+.about-card-icon {
+  align-items: center;
+  background: rgba(99, 120, 255, 0.16);
+  border: 1px solid rgba(103, 232, 249, 0.24);
+  border-radius: 12px;
+  color: #a5f3fc;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.about-card h2,
+.about-mission h2 {
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.about-card p,
+.about-mission p {
+  color: rgba(255, 255, 255, 0.62);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
+  text-align: left;
+}
+
+.about-mission {
+  align-items: flex-start;
+  background: rgba(10, 16, 35, 0.72);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 22px;
+  grid-template-columns: 0.85fr 1.15fr;
+  max-width: 980px;
+  padding: 26px;
+  text-align: left;
+  width: min(100%, 980px);
+}
+
+.about-section-label {
+  color: rgba(165, 180, 252, 0.9);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.16em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.about-back-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 25%, #06b6d4 100%);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 22px rgba(79, 70, 229, 0.38);
+  color: white;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  padding: 14px 24px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.about-back-btn:hover {
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.35),
+              0 0 22px rgba(6, 182, 212, 0.18);
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 840px) {
+  .about-grid,
+  .about-mission {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .about-page {
+    padding: 64px 16px 44px;
+  }
+
+  .about-card,
+  .about-mission {
+    border-radius: 14px;
+    padding: 20px;
+  }
+}
