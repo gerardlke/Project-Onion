@@ -22,7 +22,7 @@ def build_context_block(retrieved_concepts: list[dict]):
             f"Concept: {concept['name']}\n"
             f"Notes: {concept['raw_text']}"
         )
-    return "\n\n---\n\n".join(blocks)
+    return "\n---\n".join(blocks)
 
 
 def build_prompt(query: str, retrieved_concepts: list[dict], conversation_history: list[dict]):
@@ -37,6 +37,8 @@ def build_prompt(query: str, retrieved_concepts: list[dict], conversation_histor
     """
     context_block = build_context_block(retrieved_concepts)
     system_content = RAG_SYSTEM_PROMPT.strip().format(context=context_block)
+
+    print("SYSTEM CONTENT", system_content)
 
     messages = [{"role": "system", "content": system_content}]
 
