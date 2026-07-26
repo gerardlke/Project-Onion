@@ -302,6 +302,7 @@ def get_all_concepts_by_user_id(db: Session, user_id: int):
             concepts.user_id AS user_id,
             concepts.name AS name,
             concepts.embedding AS embedding,
+            LENGTH(concepts.raw_text) AS text_length,
             topics.id AS topic_id
         FROM concepts
         LEFT JOIN documents_to_concepts
