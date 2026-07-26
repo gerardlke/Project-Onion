@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { apiFetch } from '../Api';
-import { getTopicColor } from '../Data/network.js';
+import { getTopicColor, fetchNodeDetail } from '../Data/network.js';
 import NetworkScene from '../Components/NetworkScene';
 import AiChatBot from '../Components/AiChatBot';
 import './Universe.css';
@@ -112,8 +112,31 @@ export default function Universe() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  function handleSetActiveNode(node) {
+  async function handleSetActiveNode(node) {
+    if (!node) {
+      setActiveNode(null);
+      return;
+    }
+
     setActiveNode(node);
+
+    try {
+      const detail = await fetchNodeDetail(node.id);
+      setActiveNode((current) => {
+        if (!current || current.id !== node.id) return current;
+        return {
+          ...current,
+          label: detail.concept,
+          text: detail.text ?? 'No description available.',
+          topicName: detail.topic_name ?? current.topicName,
+        };
+      });
+    } catch {
+      setActiveNode((current) => {
+        if (!current || current.id !== node.id) return current;
+        return { ...current, text: 'Could not load concept detail.' };
+      });
+    }
   }
 
   function handleSetActiveEdge(edge) {
@@ -347,7 +370,12 @@ export default function Universe() {
             {/* Colour bar tied to the node's topic colour */}
             <div style={{ width: '32px', height: '2px', background: activeNode.color, borderRadius: '2px' }} />
             <p style={bodyStyle}>
-              {activeNode.text || 'No description available.'}
+              {activeNode.text === null
+                ? <span style={{ opacity: 0.4, fontStyle: 'italic', fontSize: '12px' }}>
+                    Loading…
+                  </span>
+                : activeNode.text || 'No description available.'
+              }
             </p>
             <button style={closeBtn} onClick={() => setActiveNode(null)}>
               CLOSE
