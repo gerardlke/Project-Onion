@@ -9,41 +9,19 @@ export function getTopicColor(topicId) {
 }
 
 
-// Creating the concept node in the network
-const topicCache = new Map();
-
-function fetchTopicCached(topicId) {
-  if (topicCache.has(topicId)) {
-    return topicCache.get(topicId);
-  }
-
-  const requestPromise = (async () => {
-    const response = await apiFetch(`/universe/topic/${topicId}`);
-    if (!response.ok) throw new Error('Failure while pulling topic details');
-    return response.json();
-  })();
-
-  topicCache.set(topicId, requestPromise);
-  return requestPromise;
-}
-
 export async function createConceptNode(concept, color) {
-
-  const nodeResponse = await apiFetch(`/universe/node/${concept.id}`);
-  if (!nodeResponse.ok) throw new Error('Failure while pulling concept node data');
-  const nodeResult = await nodeResponse.json();
-
-  const radius = 0.2 + (nodeResult.text.length * 0.002);
-  
-  const topicResult = await fetchTopicCached(concept.topic_id);
-
+  const radius = 0.2 + ((concept.text_length ?? 0) * 0.002);
   return {
     id: concept.id,
     position: concept.coordinates.map((i) => i * 10),
     color,
     radius,
-    label: nodeResult.concept,
-    topicName: topicResult.topic,
-    text: nodeResult.text
+    topicId: concept.topic_id
   };
+}
+
+export async function fetchNodeDetail(conceptId) {
+  const response = await apiFetch(`/universe/node/${conceptId}`);
+  if (!response.ok) throw new Error('Failed to fetch concept detail');
+  return response.json();
 }

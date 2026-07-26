@@ -118,37 +118,38 @@ export default function NetworkScene({
   }, [onProcessingChange]);
 
   const [visibleNodes, setVisibleNodes] = useState([]);
-  
+
   useEffect(() => {
     let cancelled = false;
-
-    async function processNodes() {
-      onProcessingChangeRef.current?.(true);
-      try {
+    
+    async function loadNodes() {
+      if (conceptNodes.length > 0) {
+        onProcessingChangeRef.current?.(true);
         const nodes = await Promise.all(
-          conceptNodes.map((concept) =>
-            createConceptNode(concept, getTopicColor(concept.topic_id))
+          conceptNodes.map(async (concept) => 
+            await createConceptNode(concept, getTopicColor(concept.topic_id))
           )
         );
-        if (!cancelled) setVisibleNodes(nodes);
-      } finally {
-        if (!cancelled) onProcessingChangeRef.current?.(false);
+
+        if (!cancelled.current) {
+          setVisibleNodes(nodes);
+          onProcessingChangeRef.current?.(false);
+        }
+      } else {
+        if (!cancelled.current) {
+          setVisibleNodes([]);
+          onProcessingChangeRef.current?.(false);
+        }
       }
     }
-
-    if (conceptNodes.length > 0) {
-      processNodes();
-    } else {
-      setVisibleNodes([]);
-      onProcessingChangeRef.current?.(false);
-    }
-
+    loadNodes();
+    
     return () => { cancelled = true; };
   }, [conceptNodes, topics]);
-
+  
   const scaledNodes = visibleNodes.map((node) => ({
     ...node,
-    position: node.position.map((v) => v * universeScale),
+    position: (node.position || [0, 0, 0]).map((v) => v * universeScale),
     radius: (node.radius ?? 0.4) * nodeScale,
   }));
 
