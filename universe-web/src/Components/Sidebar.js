@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 import './Sidebar.css';
 
@@ -19,6 +20,11 @@ export default function Sidebar({ isOpen, onClose, username, onLogout }) {
         </div>
 
         <div className="sidebar-divider" />
+
+        <div className="sidebar-content">
+          <Link to="/about">About Us</Link>
+          <Link to="/home">Back to Universe</Link>
+        </div>
 
         <nav className="sidebar-nav">
           <button className="sidebar-signout" onClick={() => { onClose(); onLogout(); }}>
