@@ -18,6 +18,7 @@ class ConceptNode(BaseModel):
     id: int
     topic_id: int | None
     coordinates: list[float]
+    text_length: int
 
 class NodeResponse(BaseModel):
     nodes: list[ConceptNode]
