@@ -181,6 +181,7 @@ async def get_node_detail(
 
         return NodeDetailResponse(
             id=concept["id"],
+            topic_name=concept["topic_name"],
             concept=concept["name"],
             text=concept["raw_text"]
         )

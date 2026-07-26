@@ -25,6 +25,7 @@ class NodeResponse(BaseModel):
 
 class NodeDetailResponse(BaseModel):
     id: int
+    topic_name: str
     concept: str
     text: str
 

@@ -19,7 +19,7 @@ RELATIONSHIP_LIMIT = 10
 CONFIDENCE_THRESHOLD = 0.5
 
 # Database configs
-RESET_DB = True
+RESET_DB = False
 
 # Concept extraction configs
 CHUNK_SIZE = 1000

@@ -324,9 +324,21 @@ def get_concept_by_id(db: Session, concept_id: int):
     Ouput:
     """
     query = """
-        SELECT * 
+        SELECT 
+            concepts.id AS id,
+            concepts.user_id AS user_id,
+            concepts.name AS name,
+            concepts.raw_text AS raw_text,
+            concepts.embedding AS embedding,
+            topics.name AS topic_name
         FROM concepts 
-        WHERE id = :concept_id
+        LEFT JOIN documents_to_concepts
+            ON documents_to_concepts.concept_id = concepts.id
+        LEFT JOIN documents
+            ON documents.id = documents_to_concepts.document_id
+        LEFT JOIN topics
+            ON topics.id = documents.topic_id
+        WHERE concepts.id = :concept_id
     """
     return execute_select(db, query, {"concept_id": concept_id})
 
