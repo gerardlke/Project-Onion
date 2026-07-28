@@ -4,6 +4,15 @@ An artificial intelligence-augmented semantic learning platform designed to tran
 
 Project Onion processes uploaded notes, extracts key concepts, generates semantic embeddings, and visualizes them within an explorable semantic space. The platform enables students to discover conceptual relationships between topics, navigate their knowledge base via an interactive interface, and identify potential knowledge gaps.
 
+## User Flow
+
+1. Register an account and sign in.
+2. Create one or more topics to organise your study materials.
+3. Upload documents to a topic. The platform extracts concepts, generates embeddings, and maps relationships automatically in the background.
+4. Navigate to the universe to explore your concepts as an interactive 3D star map, where proximity reflects semantic similarity and edges represent classified relationships between concepts.
+5. Click any concept node or relationship edge to inspect its detail.
+6. Use the AI chat assistant to ask questions about your uploaded concepts and receive answers grounded in your own study materials.
+
 ## Architecture Overview
 
 The system utilizes a modular, full-stack architecture comprised of:
@@ -19,7 +28,7 @@ The semantic pipeline processes source documents through the following phases:
 
 1. **Document Upload:** Students upload source materials in various formats.
 2. **Text Extraction:** Parsing, extraction and chunking of raw textual content.
-3. **Concept Extraction:** Identifying core academic concepts within the text segments.
+3. **Concept Extraction:** Identifying idea-level academic concepts within semantic chunks using an LLM prompt, extracting concepts rather than surface-level entity nouns.
 4. **Embedding Generation:** Creating semantic vector representations.
 5. **Dimension Reduction:** Formatting high-dimensional vectors for spatial visualization.
 6. **Database Persistence:** Committing the processed data to the PostgreSQL database.
@@ -30,8 +39,10 @@ The semantic pipeline processes source documents through the following phases:
 - **Framework:** React (Create React App)
 - **Routing:** React Router v6
 - **Styling:** HTML / CSS (component-scoped stylesheets)
-- **3D Rendering:** React Three Fiber with `@react-three/drei`
+- **3D Rendering:** React Three Fiber with `@react-three/drei` and `@react-spring/three`
 - **Authentication:** JWT stored in localStorage, attached as Bearer token on all authenticated API calls
+- **Icons:** FontAwesome (`@fortawesome/react-fontawesome`)
+- **HTTP Client:** Native Fetch API via centralised `apiFetch` utility with automatic Bearer token injection
 
 ### Backend
 - **Framework:** FastAPI
@@ -43,14 +54,26 @@ The semantic pipeline processes source documents through the following phases:
 - **Engine:** PostgreSQL with pgvector extension
 
 ### AI / Natural Language Processing (NLP)
-- **Embeddings:** SentenceTransformers
-- **Concept Extraction:** Configurable LLM (local HuggingFace)
-- **Relationship Classification:** NLI (cross-encoder/nli-deberta-v3-small)
-- **Dimensionality Reduction:** PCA
+- **Embeddings**: SentenceTransformers (local) or HuggingFace Inference API (cloud)
+- **Concept Extraction**: Configurable LLM — local HuggingFace, Groq, or OpenAI via provider abstraction
+- **Relationship Classification**: LLM-based classification via structured JSON prompt
+- **Relationship Similarity Search**: pgvector cosine distance
+- **Dimensionality Reduction**: numpy-only PCA
+- **RAG Chatbot**: Retrieval-augmented generation using pgvector similarity search and LLM response generation
 
 ### Infrastructure
 - **Containerization:** Docker
 - **Orchestration:** Docker Compose
+
+- The application runs as three containers orchestrated by Docker Compose:
+
+  | Container | Image | Responsibility |
+  |---|---|---|
+  | project_onion_frontend | Node | Serves the React application |
+  | project_onion_backend | Python 3.12 slim | Runs the FastAPI application via Uvicorn |
+  | project_onion_db | pgvector/pgvector:pg16 | PostgreSQL with pgvector extension pre-compiled |
+
+  The `pgvector/pgvector:pg16` image is used instead of the official PostgreSQL image because pgvector is a C extension that must be compiled against the specific PostgreSQL binary and cannot be installed at runtime without building from source.
 
 ## Project Structure
 
@@ -75,13 +98,39 @@ project-root/
     public/
     src/
       Components/
+        AiChatBot.js
+        AiChatBot.css
+        CursorGlow.js
+        NetworkEdge.js
+        NetworkNodes.js
+        NetworkScene.js
+        Sidebar.js
+        Sidebar.css
+        UserIconButton.js
+        UserIconButton.css
       Data/
+        network.js
       Images/
+        backgroundimage.jpg
+        Star.png
       Login/
+        Login.js
+        Login.css
+        Register.js
       Pages/
+        Universe.js
+        Universe.css
+        Upload.js
+        Upload.css
+      App.js
+      App.css
+      Api.js
+      index.js
+      index.css
+    vercel.json
     Dockerfile
-    package-lock.json
     package.json
+    package-lock.json
   docker-compose.yml
   .env
   .gitignore
@@ -117,6 +166,14 @@ POSTGRES_PASSWORD=<password>
 POSTGRES_DB=<db_name>
 DATABASE_URL=postgresql://<user>:<password>@postgres:5432/<db_name>
 
+# LLM provider
+GROQ_API_KEY=<your_groq_key>
+OPENAI_API_KEY=<your_openai_key>
+ENCODER=sentence-transformers/all-MiniLM-L6-v2
+
+# Set to true to use local models instead of external APIs
+LOCAL_DEPLOYMENT=false
+
 # Set to true to wipe and recreate the database schema on startup
 RESET_DB=false
 
@@ -146,6 +203,8 @@ docker compose up -d --build
 
 ### Accessing the Application
 
+#### Local Deployment
+
 After all containers have started successfully:
 
 Frontend
@@ -165,6 +224,36 @@ Backend API Documentation
 ```text
 http://localhost:8000/docs
 ```
+
+#### Cloud Deployment
+
+The application can also be deployed with the frontend and backend hosted separately. Note that using a backend cloud deployment requires a separate database cloud deployment too. 
+
+An instance has already been deployed for reference.
+
+Frontend (Vercel)
+
+```text
+https://project-onion-six.vercel.app
+```
+
+Backend (Microsoft Azure Container Instance)
+
+```text
+http://project-onion.gkbmdwg9dkdbcedm.malaysiawest.azurecontainer.io:8000
+```
+
+Database (Supabase)
+
+```text
+https://supabase.com/dashboard/project/avecaybyplxugvvfooyq
+```
+
+When deploying to separate hosts, ensure the following:
+
+- The frontend `vercel.json` rewrite rules point to the backend's public URL
+- The backend FastAPI application has CORS configured to allow requests from the Vercel domain
+- All required environment variables are configured in the respective platform's settings rather than a local `.env` file
 
 ### Stopping Services
 
@@ -213,6 +302,8 @@ The app will be available at `http://localhost:3000`. When running locally, the 
 
 When running the full stack via Docker Compose, the proxy should point to the Docker backend service name instead.
 
+When deploying to cloud separately, remove the proxy field and configure `vercel.json` rewrite rules to forward API requests to the hosted backend URL instead.
+
 **Running the backend locally**
 
 The backend can be run outside Docker for faster development iteration:
@@ -241,3 +332,9 @@ The application is configured using Docker Compose with separate containers for:
 * PostgreSQL Database
 
 Within the Docker network, the backend connects to PostgreSQL using the hostname `postgres`. When running components outside Docker, local connections should use `localhost` instead.
+
+**API proxying**
+
+When running locally with `npm start`, API requests are proxied to the backend via the `proxy` field in `package.json`. This means all relative API calls such as `/user/login` and `/upload/get_topics` are forwarded automatically without any changes to the frontend code.
+
+When running on Vercel, the `proxy` field is ignored. API forwarding is instead handled by `vercel.json` rewrite rules, which map each API route prefix to the deployed backend URL. The frontend code itself does not change between environments since all calls use relative paths.
